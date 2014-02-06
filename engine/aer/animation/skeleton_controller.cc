@@ -1,0 +1,274 @@
+// -----------------------------------------------------------------------------
+// CreativeCommons BY-SA 3.0 2013 <Thibault Coppex>
+//
+//
+// -----------------------------------------------------------------------------
+
+#include "aer/animation/skeleton_controller.h"
+
+#include "aer/loader/skma.h"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtx/quaternion.hpp"
+
+
+
+
+namespace aer {
+
+/// Static fields
+SkeletonController::SharedData_t SkeletonController::sShared;
+SkeletonProxy SkeletonController::sSkeletonProxy;
+
+
+void SkeletonController::SharedData_t::init() {
+  if (bInit) {
+    return;
+  }
+
+  /// Samples buffer
+  samples.resize(kMaxClipsPerSkeleton);
+  for (auto &sample : samples) {
+    sample.joints.resize(kMaxJointsPerSkeleton);
+  }
+
+  /// Skinning texture buffer
+  skinning.buffer.generate();
+  skinning.buffer.bind(GL_TEXTURE_BUFFER);
+  U32 bytesize = kMaxJointsPerSkeleton * sizeof(Matrix4x4);
+  skinning.buffer.allocate(bytesize, GL_STREAM_DRAW);
+  skinning.buffer.unbind();
+
+  skinning.texture.generate();
+  skinning.texture.bind();
+  skinning.texture.set_buffer(GL_RGBA32F, skinning.buffer);
+  skinning.texture.unbind();
+  CHECKGLERROR();
+
+  bInit = true;
+}
+
+//-----------------------------------------------------------------------------
+
+namespace {
+
+/// Apply a linear interpolation on two samples
+void LerpSamples(const AnimationSample_t &s1,
+                 const AnimationSample_t &s2,
+                 const F32 factor,
+                 AnimationSample_t &dst_sample);
+
+/// Generate a sample for sequence_clip at global_time
+bool ComputePose(const F32 global_time,
+                 SequenceClip_t& sequence_clip,
+                 AnimationSample_t& dst_sample);
+
+}  // namespace
+
+
+bool SkeletonController::init(const std::string &skeleton_ref) {
+  mSkeleton = sSkeletonProxy.get(skeleton_ref);
+
+  if (nullptr == mSkeleton) {
+    return false;
+  }
+
+  //------ [temp]
+  /// Generates SequenceClips from the skeleton's animation clips
+  mSkeleton->generate_sequence(mSequence); //
+  //------
+
+  /// Outputs
+  mLocalPose.joints.resize(mSkeleton->numjoints());
+  mGlobalPoseMatrices.resize(mSkeleton->numjoints());
+  mSkinningMatrices.resize(mSkeleton->numjoints());
+
+  // Shared data
+  AER_ASSERT(mSkeleton->numclips() <= kMaxClipsPerSkeleton);
+  AER_ASSERT(mSkeleton->numjoints() <= kMaxJointsPerSkeleton);
+  sShared.init();
+
+  return true;
+}
+
+void SkeletonController::update() {
+  /// Activates each sequence's leaves on the blend tree
+  /// [TODO: set once by an Action State Machine each time a state is entered]
+  mBlendTree.activate_leaves(true, mSequence); //
+
+  /// Compute weight for active leaves
+  mBlendTree.evaluate(1.0f, mSequence);
+
+
+  /// 1) Compute the static pose of each contributing clips
+  U32 active_count = compute_poses();
+
+  if (active_count == 0u) {
+    AER_WARNING("no animation clips provided");
+    return;
+  }
+
+  /// 2) Blend between poses to get a unique local pose
+  blend_poses(active_count);
+
+  /// 3) Generate global pose matrices
+  generate_global_pose_matrices();
+
+  /// 4) Generate the final skinning matrices
+  generate_skinning_matrices();
+}
+
+U32 SkeletonController::compute_poses() {
+  F32 global_time = GlobalClock::Get().application_time(SECOND);
+
+  U32 active_count = 0u;
+  for (auto &sc : mSequence) {
+    if (sc.bEnable && ComputePose(global_time, sc, sShared.samples[active_count])) {
+      ++active_count;
+    }
+  }
+
+  return active_count;
+}
+
+void SkeletonController::blend_poses(U32 active_count) {
+  SampleBuffer_t &samples = sShared.samples;
+
+  /// Bypass the weighting if their is only one action
+  if (active_count == 1u) {
+    std::copy(samples[0u].joints.begin(), 
+              samples[0u].joints.begin() + mLocalPose.joints.size(),
+              mLocalPose.joints.begin());
+    return;
+  }
+
+  /// Compute the local poses sample by blending each contributing samples.
+  /// (ie. flat weighted average)
+  /// Note : paralellizable (using a REDUCE operation)
+
+  /// 1) Calculate the total weight for normalization
+  F32 sum_weights = 0.0f;
+  for(const auto &sc : mSequence) {
+    if (sc.bEnable) {
+      sum_weights += sc.weight;
+    }
+  }
+  sum_weights = (sum_weights == 0.0f) ? 1.0f : sum_weights;
+
+  /// 2) Copy the first weighted action as base
+  SequenceIterator_t it = mSequence.begin();
+  F32 w = it->weight / sum_weights;
+  for(U32 i = 0u; i < mLocalPose.joints.size(); ++i) {
+    const auto &src = samples[0u].joints[i];
+          auto &dst = mLocalPose.joints[i];
+    
+    dst.qRotation    = w * src.qRotation;
+    dst.vTranslation = w * src.vTranslation;
+    dst.fScale       = w * src.fScale;
+  }
+
+  /// 3) Add the rest
+  U32 sid = 1u;
+  for(it = ++it; sid < active_count; ++it, ++sid) {
+    w = it->weight / sum_weights;
+
+    for(U32 i = 0u; i < mLocalPose.joints.size(); ++i) {
+      const auto &src = samples[sid].joints[i];
+            auto &dst = mLocalPose.joints[i];
+
+      // Note : glm does not handle operator+= for quaternions natively
+      dst.qRotation     = w * src.qRotation + dst.qRotation;
+      dst.vTranslation += w * src.vTranslation;
+      dst.fScale       += w * src.fScale;
+    }
+  }
+}
+
+void SkeletonController::generate_global_pose_matrices() {
+  const I32 *parent_ids = mSkeleton->parent_ids();
+
+  for(U32 i = 0u; i < mGlobalPoseMatrices.size(); ++i) {
+    const auto &joint = mLocalPose.joints[i];
+
+    mGlobalPoseMatrices[i]  = glm::translate(glm::mat4(1.0f), joint.vTranslation);
+    mGlobalPoseMatrices[i] *= glm::mat4_cast(joint.qRotation);
+
+    // multiply non-root bones with their parent
+    if (i > 0u) {
+      mGlobalPoseMatrices[i] = mGlobalPoseMatrices[parent_ids[i]] * 
+                               mGlobalPoseMatrices[i];
+    }
+  }
+}
+
+void SkeletonController::generate_skinning_matrices() {
+  /// Note : parallelizable
+  const Matrix4x4 *inverse_bind_matrices = mSkeleton->inverse_bind_matrices();
+
+  for(U32 i = 0u; i < mGlobalPoseMatrices.size(); ++i) {
+    mSkinningMatrices[i] = mGlobalPoseMatrices[i] * inverse_bind_matrices[i];
+  }
+
+  /// Upload to the shared skinning texture buffer
+  /// Note : if skinning matrices are not used locally, they could also be 
+  /// mapped directly.
+  DeviceBuffer &buffer = sShared.skinning.buffer;
+  buffer.bind(GL_TEXTURE_BUFFER);
+  U32 bytesize = mGlobalPoseMatrices.size() * sizeof(mGlobalPoseMatrices[0]);
+  buffer.upload(0u, bytesize, mSkinningMatrices.data());
+  buffer.unbind();
+  CHECKGLERROR();
+}
+
+
+namespace {
+
+void LerpSamples(const AnimationSample_t &s1,
+                 const AnimationSample_t &s2,
+                 const F32 factor,
+                 AnimationSample_t &dst_sample) 
+{
+  /// Note : parallelizable
+  for(U32 i = 0u; i < dst_sample.joints.size(); ++i) {
+    JointPose_t &dst = dst_sample.joints[i];
+
+    const JointPose_t &J1 = s1.joints[i];
+    const JointPose_t &J2 = s2.joints[i];
+
+    // For quaternions, use shortMix (slerp) or fastMix (nlerp) but NOT mix
+    dst.qRotation    = glm::fastMix(J1.qRotation,J2.qRotation,    factor);
+    dst.vTranslation = glm::mix(J1.vTranslation, J2.vTranslation, factor);
+    dst.fScale       = glm::mix(J1.fScale,       J2.fScale,       factor);
+  }
+}
+
+bool ComputePose(const F32 global_time,
+                 SequenceClip_t& sequence_clip,
+                 AnimationSample_t& dst_sample) {
+  // TODO : - Use compressed joints data
+  
+  F32 local_time;  
+  if (!sequence_clip.compute_localtime(global_time, local_time)) {
+    sequence_clip.bEnable = false;
+    return false;
+  }
+
+  const AnimationClip_t *clip = static_cast<AnimationClip_t*>(sequence_clip.action_ptr);
+
+  // Found the frame boundaries
+  F32 lerp_frame = local_time * clip->framerate;
+  U32 frame      = static_cast<U32>(lerp_frame) % clip->numframes;
+  U32 next_frame = (frame + 1u) % clip->numframes;
+
+  /// -- Compute the correct time sample for the pose
+  const AnimationSample_t &s1 = clip->samples[frame];
+  const AnimationSample_t &s2 = clip->samples[next_frame];
+  F32 lerp_factor = lerp_frame - frame;
+
+  LerpSamples(s1, s2, lerp_factor, dst_sample);
+  return true;
+}
+
+}  // namespace
+
+
+}  // namespace aer

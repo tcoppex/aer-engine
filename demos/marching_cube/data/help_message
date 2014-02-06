@@ -1,0 +1,15 @@
+----------------------------------------------------------------------
+Procedurally (GLSL) rendered geometry via a marching cube algorithm.
+
+This code is based on the GPU Gems 3 paper "Generating complex procedural 
+terrains using the GPU" from Ryan Geiss.
+
+
+Controls:
+[W-A-S-D + mouse] or [SixAxis pad] : control the camera.
+[Space] or [SixAxis start] : pause / resume the clock.
+[F] : display FPS.
+[W] : wireframe mode.
+[H] : display this help.
+[ESCAPE] : quit the application.
+----------------------------------------------------------------------

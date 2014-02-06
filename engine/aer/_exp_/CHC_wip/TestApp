@@ -1,0 +1,37 @@
+
+#include "TestApp.hpp"
+
+
+void TestApp::init()
+{
+  /// Build the CHC tree
+  m_chcTree.build( m_scene.getNumMeshes(), m_scene.getMeshes(), m_scene.getAABBs() );
+}
+
+
+void TestApp::updateFrame()
+{
+  // Run the CHC+ algorithm
+  m_chcTree.run( *m_camera, m_timer.getTotalFrameCount());
+}
+
+void TestApp::drawFrame()
+{ 
+  const CHCull::VLeavesId_t &vleaves = m_chcTree.getVisibleLeavesId();  
+  CHCull::VLeavesIdCIterator_t it;
+  
+  // render visible objects  
+  //for (it=vleaves.begin(); it!=vleaves.end(); ++it) {
+  for (unsigned int i=0u; i<m_scene.getNumMeshes(); ++i) {
+    m_scene.render( i );
+  }
+  
+  /*
+  // render AABBs
+  glColor3f(1.0f, 0.0f, 0.0f);
+  const aer::BoundingBox *aabbs = m_scene.getAABBs();
+  for (it=vleaves.begin(); it!=vleaves.end(); ++it) {
+    aabbs[*it].render();
+  }
+  */
+}

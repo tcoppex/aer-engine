@@ -1,0 +1,25 @@
+dull_metal1
+null
+
+sintel_eye
+Bump sintel_eyeball_bmp.jpg
+Kd sintel_eyeball_diff.jpg
+
+leatherBoots
+Kd sintel_boots.jpg
+
+leatherPants
+Kd sintel_pants.jpg
+
+leatherGloves
+Kd leather_06_diff.jpg
+
+Sintel_Skin1_layer
+Kd sintel_skin_diff.jpg
+
+sweater_main
+Kd sintel_sweater_painted.jpg
+
+inside_mouth
+Kd sintel_teeth_diff.jpg
+
