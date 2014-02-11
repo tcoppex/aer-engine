@@ -12,7 +12,7 @@ Demos
 <table>
     <tr>
         <td>aura</td>
-        <td>A technical demo demonstrating the animation capabilities of the engine, with some rendering techniques.</td>
+        <td>A technical demo demonstrating the animation capabilities of the engine, with some rendering techniques (eg. HBAO on Compute Shader).</td>
     </tr>
     <tr>
         <td>cuda_cs_blur</td>
@@ -24,12 +24,12 @@ Demos
     </tr>
     <tr>
         <td>marching_cube</td>
-        <td>  Procedural geometry generation with a marching cube algorithm on the GPU using
-  tesselation feedback.</td>
+        <td>Procedural geometry generation with a marching cube algorithm on the GPU using
+            transform feedback.</td>
     </tr>
     <tr>
         <td>simple_hair</td>
-        <td>  Hair simulation rendered with Tesselation.</td>
+        <td>Hair simulation rendered with Tesselation.</td>
     </tr>
 </table>
 
