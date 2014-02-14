@@ -9,24 +9,29 @@ An OpenGL 4.3 / C++ 11 rendering engine oriented towards animation.
 
 Demos
 ---------------------------------
-
-* aura :
-  A technical demo demonstrating the animation capabilities of the engine, with
-  some rendering techniques.
-  
-* cuda_cs_blur :
-  Performance comparison between a CUDA and a Compute Shader blur kernel.
-
-* gpu_raymarching :
-  Raymarching on a Fragment Shader.
-  
-* marching_cube :
-  Procedural geometry generation with a marching cube algorithm on the GPU using
-  tesselation feedback.
-
-* simple_hair :
-  Hair simulation rendered with Tesselation.
-
+<table>
+    <tr>
+        <td>aura</td>
+        <td>A technical demo demonstrating the animation capabilities of the engine, with some rendering techniques (eg. HBAO on Compute Shader).</td>
+    </tr>
+    <tr>
+        <td>cuda_cs_blur</td>
+        <td>Performance comparison between a CUDA and a Compute Shader blur kernel.</td>
+    </tr>
+    <tr>
+        <td>gpu_raymarching</td>
+        <td>Raymarching on a Fragment Shader.</td>
+    </tr>
+    <tr>
+        <td>marching_cube</td>
+        <td>Procedural geometry generation with a marching cube algorithm on the GPU using
+            transform feedback.</td>
+    </tr>
+    <tr>
+        <td>simple_hair</td>
+        <td>Hair simulation rendered with Tesselation.</td>
+    </tr>
+</table>
 
 Compilation
 ---------------------------------
