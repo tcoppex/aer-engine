@@ -30,6 +30,7 @@ set(LINKED_LIBRARIES ${AER_LIBRARY}
                      ${GLEW_LIBRARY}
                      ${OPENGL_gl_LIBRARY}
                      sfml-window
+                     sfml-system
                      freeimage)
 
 # --------------
