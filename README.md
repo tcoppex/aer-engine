@@ -49,4 +49,33 @@ cmake ../../demos -DCMAKE_BUILD_TYPE:STRING=Release
 make -j4
 ```
 
+Engine dependencies :
+<table>
+    <tr>
+        <td>SFML 2.1</td>
+        <td>Used as core window manager.</td>
+    </tr>
+    <tr>
+        <td>Freeimage 3</td>
+        <td>Image loader.</td>
+    </tr>
+    <tr>
+        <td>Armadillo 3.9</td>
+        <td>Linear algebra library.</td>
+    </tr>
+    <tr>
+        <td>GLM 0.9.4.4</td>
+        <td>OpenGL Mathematics library.</td>
+    </tr>
+    <tr>
+        <td>GLEW 0.9.0</td>
+        <td>OpenGL wrangler (provided).</td>
+    </tr>
+    <tr>
+        <td>GLSW</td>
+        <td>GLSL wrangler (provided).</td>
+    </tr>
+</table>
+
+Version number corresponded to the development environment.
 
