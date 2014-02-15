@@ -30,6 +30,10 @@ namespace aer {
 /// "Introduction to Inverse Kinematics with Jacobian Transpose, Pseudoinverse 
 ///  and Damped Least Squares methods" - Samuel R. Buss
 ///
+/// TODO : - implements up to 3 DoF (just 1 at the moment)
+///        - use quaternion instead of a rotation axis, 
+///              (it will solve the previous problem too)
+///
 /// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ 
 class IKSolver {
  public:
@@ -37,11 +41,11 @@ class IKSolver {
   void init(IKChain *pIKChain);
 
   /// Resolve the ik system for the given targets
-  void update(const Vector3 targets[], U32 size);
+  void update(const Vector3 targets[], U32 numtarget);
 
 
  private:
-  void setup_jacobian(const Vector3 targets[]);
+  void setup_jacobian(const Vector3 targets[], U32 numtarget);
   void calculate_delta_thetas_DLS();
   void update_thetas();
 

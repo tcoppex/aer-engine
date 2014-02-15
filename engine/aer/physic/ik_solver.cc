@@ -42,11 +42,11 @@ void IKSolver::init(IKChain *pIKChain) {
   dls_.damping_lambda_sqr = dls_.damping_lambda * dls_.damping_lambda;
 }
 
-void IKSolver::update(const Vector3 targets[], U32 size) {
-  AER_ASSERT(size == ik_chain_->num_end_effector());
+void IKSolver::update(const Vector3 targets[], U32 numtarget) {
+  //AER_ASSERT(numtarget == ik_chain_->num_end_effector());
 
   // Setup Jacobian and deltaS vectors
-  setup_jacobian(targets);
+  setup_jacobian(targets, numtarget);
   // Calculate the change in theta values (Damped Least Squares method)
   calculate_delta_thetas_DLS();
   // Update the rotation angles
@@ -54,7 +54,7 @@ void IKSolver::update(const Vector3 targets[], U32 size) {
 }
 
 
-void IKSolver::setup_jacobian(const Vector3 targets[]) {
+void IKSolver::setup_jacobian(const Vector3 targets[], U32 numtarget) {
   Vector3 new_coords;
 
   for (auto n = ik_chain_->begin(); n != ik_chain_->end(); ++n) {
@@ -65,7 +65,8 @@ void IKSolver::setup_jacobian(const Vector3 targets[]) {
 
     // retrieve the end effector's target
     U32 ee_id = (*n)->type_id();
-    const Vector3& target   = targets[ee_id];
+    U32 target_id = glm::min(ee_id, numtarget);
+    const Vector3& target   = targets[target_id];
     const Vector3& n_pos_ws = (*n)->position_ws();
 
     // update the target position from its end effector

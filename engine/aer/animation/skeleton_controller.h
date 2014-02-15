@@ -63,9 +63,9 @@ class SkeletonController {
   struct SharedData_t {
     void init();
 
-    SampleBuffer_t samples;
-    TBO_t     skinning;
-    bool           bInit = false;
+    SampleBuffer_t  samples;
+    TBO_t           skinning;
+    bool            bInit = false;
   };
 
   static SharedData_t sShared;

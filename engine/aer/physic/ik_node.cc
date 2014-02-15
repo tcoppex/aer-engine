@@ -15,9 +15,11 @@ namespace aer {
 IKNode::IKNode(IKType_t type, IKNode *parent, U32 type_id) :
   type_(type),
   parent_(parent),
-  type_id_(type_id)
+  type_id_(type_id),
+  theta_(0.0)
 {}
 
+// TODO : check validity
 void IKNode::update() {
 /// recompute GLOBAL POSES from local pose & theta
   Vector3 pos_ws = position_rel();

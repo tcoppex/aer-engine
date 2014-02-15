@@ -28,7 +28,6 @@ enum IKType_t {
 class IKNode {
  public:
   IKNode(IKType_t type, IKNode *parent, U32 type_id);
-  ~IKNode() {}
 
   /// Update the node's world-space coordinates
   void update();
@@ -38,18 +37,18 @@ class IKNode {
 
   U32 type_id() const { return type_id_; }         // XXX what if type is both ?
   
-  F64 theta()   const { return theta_; }
+  F64 theta() const { return theta_; }
   
-  bool        is_joint() const { return type_ & IK_JOINT; }  
+  bool is_joint() const { return type_ & IK_JOINT; }  
   bool is_end_effector() const { return type_ & IK_END_EFFECTOR; }
 
   /// Position
   virtual const Vector3& position_rel() = 0;
-  virtual const Vector3& position_ws() = 0;
+  virtual const Vector3& position_ws()  = 0;
 
   /// Rotation axis (vec3 or quaternion ?)
   virtual const Vector3& rotation_rel() = 0;
-  virtual const Vector3& rotation_ws() = 0;
+  virtual const Vector3& rotation_ws()  = 0;
   
   /// Rotation constraints
   virtual F64 theta_min() const = 0;
@@ -57,7 +56,7 @@ class IKNode {
 
   /// Set new theta value
   void set_theta(F64 t) { theta_ = t; }
-  void inc_theta(F64 t) { theta_ += t; }
+  void inc_theta(F64 t) { set_theta(theta_ + t); }
 
 
  protected:

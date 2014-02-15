@@ -37,9 +37,6 @@ class IKChain {
     clear();
   }
 
-  /// Insert a node in the list
-  void insert_node(IKNode* node);
-
   /// Reset the chains
   void clear();
 
@@ -57,6 +54,10 @@ class IKChain {
   iterator       end()         { return chain_.end();   }
   const_iterator end()   const { return chain_.end();   }
 
+
+ protected:
+  /// Insert a node in the list
+  void insert_node(IKNode* node);
 
  private:
   Container_t chain_;

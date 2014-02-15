@@ -10,7 +10,10 @@
 namespace aer {
 
 void IKChain::clear() {
-  AER_CHECK("TODO" && 0);
+  for (auto& node : chain_) {
+    AER_SAFE_DELETE(node);
+  }
+  chain_.clear();
 }
 
 void IKChain::insert_node(IKNode* node) {
