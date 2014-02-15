@@ -23,6 +23,10 @@ Demos
         <td>Raymarching on a Fragment Shader.</td>
     </tr>
     <tr>
+        <td>ik_demo</td>
+        <td>A Basic Inverse Kinematic demo.</td>
+    </tr>
+    <tr>
         <td>marching_cube</td>
         <td>Procedural geometry generation with a marching cube algorithm on the GPU using
             transform feedback.</td>
