@@ -3,7 +3,7 @@
 //
 //
 // -----------------------------------------------------------------------------
-//        Linear Blend Skinning + BlendShape on GPU
+//        Skinning + BlendShape on GPU
 //------------------------------------------------------------------------------
 
 
@@ -14,16 +14,15 @@
 
 
 // Transformation
-uniform mat4          uModelViewProjMatrix;
+uniform mat4 uModelViewProjMatrix;
+uniform mat3 uNormalMatrix = mat3(1.0f); //
 
 // Skinning
-uniform samplerBuffer uSkinningMatrices;
+uniform samplerBuffer uSkinningDatas;
 
 // Blend Shape
-//uniform           vec4 uBS_weights;
-//uniform          ivec4 uBS_indices;
-uniform  samplerBuffer uBS_weights;
-uniform isamplerBuffer uBS_indices;
+uniform  samplerBuffer uBS_weights; //
+uniform isamplerBuffer uBS_indices; //
 uniform  samplerBuffer uBS_data;
 uniform isamplerBuffer uBS_LUT;
 uniform           uint uNumBlendShape;
@@ -43,80 +42,145 @@ out VDataBlock {
 } OUT;
 
 
-void calculateShapedVertex(inout vec4 position, inout vec3 normal)
-{
-  for (int i = 0; i < int(uUsedBlendShape); ++i) {
-    int   index  = texelFetch(uBS_indices, i); //uBS_indices[i]
-    float weight = texelFetch(uBS_weights, i); //uBS_weights[i]
 
-    int lut_idx    = gl_VertexID * int(uNumBlendShape) + index;
-    int target_idx = texelFetch(uBS_LUT, lut_idx);
+///--------------------------------------------------------------------
+/// SKINNING : DUAL QUATERNION BLENDING
+///--------------------------------------------------------------------
 
-    position += weight * texelFetch(uBS_data, target_idx);
-    //normal += weight * texelFetch(uBS_data, 2*target_idx + 1);
-  }
-  position.w = 1.0f;
-  //normal = normalize(normal);
+void getDualQuaternions(out mat4 Ma, out mat4 Mb) {
+  ivec4 indices = 2*inJointIndices;
+
+  /// Retrieve non-dual (Ma) and dual (Mb) part of the dual-quaternions
+  Ma[0] = texelFetch(uSkinningDatas, indices.x+0);
+  Mb[0] = texelFetch(uSkinningDatas, indices.x+1);
+
+  Ma[1] = texelFetch(uSkinningDatas, indices.y+0);
+  Mb[1] = texelFetch(uSkinningDatas, indices.y+1);
+
+  Ma[2] = texelFetch(uSkinningDatas, indices.z+0);
+  Mb[2] = texelFetch(uSkinningDatas, indices.z+1);
+
+  Ma[3] = texelFetch(uSkinningDatas, indices.w+0);
+  Mb[3] = texelFetch(uSkinningDatas, indices.w+1);
 }
 
-mat4 getSkinningMatrix(int jointId)
-{
+void skinning_DQBS(in vec4 weights, inout vec3 v, inout vec3 n) {
+  // Retrieve the dual quaternions
+  mat4 Ma, Mb;
+  getDualQuaternions(Ma, Mb);
+
+  vec4 A = Ma * weights;  // real part
+  vec4 B = Mb * weights;  // dual part
+
+  float invNorm = 1.0f / length(A);
+  A *= invNorm;
+  B *= invNorm;
+
+  // Position
+  v += 2.0f*cross(A.xyz, cross(A.xyz, v) + A.w*v);              // Rotation
+  v += 2.0f*(A.w * B.xyz - B.w * A.xyz + cross(A.xyz, B.xyz));  // Translation
+
+  // Normal
+  n += 2.0f*cross(A.xyz, cross(A.xyz, n) + A.w*n);
+}
+
+
+///--------------------------------------------------------------------
+/// SKINNING : LINEAR BLENDING
+///--------------------------------------------------------------------
+
+void getSkinningMatrix(in int jointId, out mat4 skMatrix) {
   if (jointId == NO_JOINT) {
-    return mat4(1.0f);
+    skMatrix = mat4(1.0f);
+    return;
   }
 
   const int matrixId = 4*jointId;
-  mat4 skMatrix;
-  skMatrix[0] = texelFetch(uSkinningMatrices, matrixId+0);
-  skMatrix[1] = texelFetch(uSkinningMatrices, matrixId+1);
-  skMatrix[2] = texelFetch(uSkinningMatrices, matrixId+2);
-  skMatrix[3] = texelFetch(uSkinningMatrices, matrixId+3);
-
-  return skMatrix;
+  skMatrix[0] = texelFetch(uSkinningDatas, matrixId+0);
+  skMatrix[1] = texelFetch(uSkinningDatas, matrixId+1);
+  skMatrix[2] = texelFetch(uSkinningDatas, matrixId+2);
+  skMatrix[3] = texelFetch(uSkinningDatas, matrixId+3);
 }
 
-void calculateSkinnedVertex(inout vec4 position, inout vec3 normal)
-{
-  ivec4 jointId = inJointIndices;
-  
-  vec4 weight   = vec4(inJointWeight.xyz, 0.0f);
-       weight.w = 1.0f-(inJointWeight.x+inJointWeight.y+inJointWeight.z);
+void skinning_LBS(in vec4 weights, inout vec4 v, inout vec3 n) {
+  mat4 M;
 
-  if (weight.x > 0.0f)
-  {
-    mat4 jointMatrix[4];
-    
-    jointMatrix[0] = getSkinningMatrix(jointId.x);
-    jointMatrix[1] = getSkinningMatrix(jointId.y);
-    jointMatrix[2] = getSkinningMatrix(jointId.z);
-    jointMatrix[3] = getSkinningMatrix(jointId.w);
+  // Retrieve skinning matrices
+  mat4 jointMatrix[4];    
+  getSkinningMatrix(inJointIndices.x, jointMatrix[0]);
+  getSkinningMatrix(inJointIndices.y, jointMatrix[1]);
+  getSkinningMatrix(inJointIndices.z, jointMatrix[2]);
+  getSkinningMatrix(inJointIndices.w, jointMatrix[3]);
 
-    mat4 mPos;
-    mPos[0] = jointMatrix[0] * position;
-    mPos[1] = jointMatrix[1] * position;
-    mPos[2] = jointMatrix[2] * position;
-    mPos[3] = jointMatrix[3] * position;
-    position = mPos * weight;
+  // Position
+  M[0] = jointMatrix[0] * v;
+  M[1] = jointMatrix[1] * v;
+  M[2] = jointMatrix[2] * v;
+  M[3] = jointMatrix[3] * v;
+  v = M * weights;
 
-    vec4 baseNormal = vec4(normal, 0.0f);
-    mPos[0] = jointMatrix[0] * baseNormal;
-    mPos[1] = jointMatrix[1] * baseNormal;
-    mPos[2] = jointMatrix[2] * baseNormal;
-    mPos[3] = jointMatrix[3] * baseNormal;
-    normal = normalize((mPos * weight).xyz);
+  // Normal
+  vec4 n_ = vec4(n, 0.0f);
+  M[0] = jointMatrix[0] * n_;
+  M[1] = jointMatrix[1] * n_;
+  M[2] = jointMatrix[2] * n_;
+  M[3] = jointMatrix[3] * n_;
+  n = (M * weights).xyz;
+}
+
+
+///--------------------------------------------------------------------
+/// SKINNING
+///--------------------------------------------------------------------
+
+void calculate_skinning(inout vec4 position, inout vec3 normal) {
+  if (!(inJointWeight.x > 0.0f)) {
+    return;
+  }
+
+  vec4 weights   = vec4(inJointWeight.xyz, 0.0f);
+       weights.w = 1.0f - (weights.x + weights.y + weights.z);
+
+  // Dual Quaternion Blend Skinning
+  //skinning_DQBS(weights, position.xyz, normal);
+
+  // Linear Blend Skinning
+  skinning_LBS(weights, position, normal);
+}
+
+///--------------------------------------------------------------------
+/// BLEND SHAPE
+///--------------------------------------------------------------------
+
+void calculate_blendshape(inout vec3 v, inout vec3 n) {
+  for (int i = 0; i < int(uUsedBlendShape); ++i) {
+    float   weight = texelFetch(uBS_weights, i); //uBS_weights[i]
+    int      index = texelFetch(uBS_indices, i); //uBS_indices[i]
+
+    int     lut_id = gl_VertexID * int(uNumBlendShape) + index;
+    int  target_id = texelFetch(uBS_LUT, lut_id);
+
+    v += weight * texelFetch(uBS_data, target_id).xyz;
+    //n += weight * texelFetch(uBS_data, 2*target_id + 1);
   }
 }
 
-void main()
-{
+///--------------------------------------------------------------------
+//// MAIN
+///--------------------------------------------------------------------
+
+void main() {
+  // Input
   vec4 position = vec4(inPosition, 1.0f);
   vec3 normal   = inNormal;
 
-  calculateShapedVertex(position, normal);    // TODO : normals !
-  calculateSkinnedVertex(position, normal);
+  // Processing
+  calculate_skinning(position, normal);
+  calculate_blendshape(position.xyz, normal);
 
+  // Output
   gl_Position   = uModelViewProjMatrix * position;
-  OUT.normal    = normal;
+  OUT.normal    = normalize(uNormalMatrix * normal);
   OUT.texCoord  = inTexCoord;
 }
 
@@ -129,43 +193,38 @@ void main()
 
 -- FS
 
-
-// UNIFORM
 uniform sampler2D uDiffuseMap;
 uniform vec3 uDiffuseColor = vec3(1.0f);
 uniform vec3 uLightDir = normalize(vec3(-1.0f, 3.5f, 5.20f));
 uniform bool uEnableTexturing = false;
 uniform bool uEnableLighting  = true;
 
-// IN
 in VDataBlock {
   vec3 normal;
   vec2 texCoord;
 } IN;
 
-// OUT
 layout(location = 0) out vec4 fragColor;
 
 
-void main()
-{
+void main() {
   vec3 color = uDiffuseColor;
   
   // Colored normal [debug]
   //color = 0.5f * (1.0f + IN.normal);
-  
+
   if (uEnableTexturing) {
     color = texture(uDiffuseMap, IN.texCoord).rgb;
   }
 
   // Manually added sky color
-  //color *= vec3(0.75f,0.45f,0.8f);
+  color *= vec3(0.95f, 0.92f, 0.9f);
 
   if (uEnableLighting) {
-    color *= max(0.7f, dot(-uLightDir, IN.normal)) *
-             max(0.9f, dot(uLightDir.yzx, IN.normal)) *
+    color *= max(0.7f, dot(-uLightDir.xyz, IN.normal)) *
+             max(0.9f, dot(+uLightDir.yzx, IN.normal)) *
              max(0.9f, dot(-uLightDir.zxy, IN.normal));
   }
-  
+
   fragColor = vec4(color, 1.0f);
 }

@@ -58,7 +58,7 @@ void Character::render(const aer::Camera &camera) {
 
   // --- Skinning on GPU using GLSL ------------------------
   skmModel_.skeleton_controller().bind_skinning_texture(texUnit);
-  mProgram.set_uniform("uSkinningMatrices", texUnit);
+  mProgram.set_uniform("uSkinningDatas", texUnit);
   ++texUnit;
   
   CHECKGLERROR();
