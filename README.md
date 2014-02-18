@@ -68,7 +68,7 @@ Engine dependencies :
         <td>Linear algebra library.</td>
     </tr>
     <tr>
-        <td>GLM 0.9.4.4</td>
+        <td>GLM 0.9.5</td>
         <td>OpenGL Mathematics library.</td>
     </tr>
     <tr>
