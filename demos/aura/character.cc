@@ -17,7 +17,7 @@ void Character::init() {
   std::string filename = DATA_DIRECTORY "models/sintel/sintel";
   AER_CHECK(skmModel_.load(filename + ".skm", filename + ".mat")); //
 
-  // ------------
+  // ----
 
   // Program shaders
   init_shaders();
@@ -26,29 +26,28 @@ void Character::init() {
   // Future version should use an Action State Machine load at runtime with AI.
   init_animations();
 
-  // Same with blend shape animation datas
+  // Idem with blendshape animation datas
   init_blendshapes();
 }
 
 void Character::update() {
   //-------------------------------------
-#if 1
-  //-- (rarely done manually, and not this way. Prefer to use a blendtree)
+  // -- [testing] Real-Time blendshape manual control.
+  // -- This is rarely done manually, and preferably not this way.
+  // -- Prefer to use a configured blendtree [wip].
   float t = 0.5f * aer::GlobalClock::Get().application_time(aer::SECOND);
   float s = 0.5f * (1.0f + cos(5.0f*t));
   s = glm::smoothstep(0.0f, 1.0f, s);
-
 
   aer::BlendTree &morph_blendtree = skmModel_.morph_controller().blend_tree();
   aer::CoeffNode *coeffnode = morph_blendtree.find_node<aer::CoeffNode>("face_coeff");
   AER_CHECK(nullptr != coeffnode);
   coeffnode->set_factor(s);
-#endif
   //-------------------------------------
 
   //---
 
-  skmModel_.update(); //
+  skmModel_.update();
 }
 
 void Character::render(const aer::Camera &camera) {  
@@ -57,10 +56,14 @@ void Character::render(const aer::Camera &camera) {
   mProgram.activate();
 
   // --- Skinning on GPU using GLSL ------------------------
-  skmModel_.skeleton_controller().bind_skinning_texture(texUnit);
+  aer::SkeletonController &skl_controller = skmModel_.skeleton_controller();
+  skl_controller.bind_skinning_texture(texUnit);
   mProgram.set_uniform("uSkinningDatas", texUnit);
   ++texUnit;
   
+  // TODO : control the subroutine handle
+  //mProgram.set_subroutine_uniform("uSkinning", skl_controller.skinning_method());
+
   CHECKGLERROR();
   // -------------------------------------------------------
 

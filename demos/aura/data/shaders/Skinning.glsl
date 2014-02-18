@@ -21,19 +21,19 @@ uniform mat3 uNormalMatrix = mat3(1.0f); //
 uniform samplerBuffer uSkinningDatas;
 
 // Blend Shape
-uniform  samplerBuffer uBS_weights; //
-uniform isamplerBuffer uBS_indices; //
+uniform  samplerBuffer uBS_weights;
+uniform isamplerBuffer uBS_indices;
 uniform  samplerBuffer uBS_data;
 uniform isamplerBuffer uBS_LUT;
 uniform           uint uNumBlendShape;
 uniform           uint uUsedBlendShape;
 
 // Input attributes
-layout(location = 0) in vec3  inPosition;
-layout(location = 1) in vec3  inNormal;
-layout(location = 2) in vec2  inTexCoord;
+layout(location = 0) in  vec3 inPosition;
+layout(location = 1) in  vec3 inNormal;
+layout(location = 2) in  vec2 inTexCoord;
 layout(location = 3) in ivec4 inJointIndices;
-layout(location = 4) in vec3  inJointWeight;
+layout(location = 4) in  vec3 inJointWeight;
 
 // Output attributes
 out VDataBlock {
@@ -42,6 +42,23 @@ out VDataBlock {
 } OUT;
 
 
+
+///--------------------------------------------------------------------
+/// SKINNING
+///--------------------------------------------------------------------
+subroutine void skinning_subroutine(in vec4 weights, inout vec3 v, inout vec3 n);
+subroutine uniform skinning_subroutine uSkinning;
+
+void calculate_skinning(inout vec3 position, inout vec3 normal) {
+  if (!(inJointWeight.x > 0.0f)) {
+    return;
+  }
+
+  vec4 weights   = vec4(inJointWeight.xyz, 0.0f);
+       weights.w = 1.0f - (weights.x + weights.y + weights.z);
+
+  uSkinning(weights, position, normal);
+}
 
 ///--------------------------------------------------------------------
 /// SKINNING : DUAL QUATERNION BLENDING
@@ -64,21 +81,28 @@ void getDualQuaternions(out mat4 Ma, out mat4 Mb) {
   Mb[3] = texelFetch(uSkinningDatas, indices.w+1);
 }
 
+subroutine(skinning_subroutine)
 void skinning_DQBS(in vec4 weights, inout vec3 v, inout vec3 n) {
+  /// Paper :
+  ///   "Geometric Skinning with Approximate Dual Quaternion Blending"
+  ///   - Kavan et al 2008
+
   // Retrieve the dual quaternions
   mat4 Ma, Mb;
   getDualQuaternions(Ma, Mb);
 
+  // Apply weights
   vec4 A = Ma * weights;  // real part
   vec4 B = Mb * weights;  // dual part
 
+  // Normalize
   float invNormA = 1.0f / length(A);
   A *= invNormA;
   B *= invNormA;
 
   // Position
-  v += 2.0f * cross(A.xyz, cross(A.xyz, v) + A.w*v);              // Rotation
-  v += 2.0f * (A.w * B.xyz - B.w * A.xyz + cross(A.xyz, B.xyz));  // Translation
+  v += 2.0f * cross(A.xyz, cross(A.xyz, v) + A.w*v);              // rotate
+  v += 2.0f * (A.w * B.xyz - B.w * A.xyz + cross(A.xyz, B.xyz));  // translate
 
   // Normal
   n += 2.0f * cross(A.xyz, cross(A.xyz, n) + A.w*n);
@@ -101,10 +125,11 @@ void getSkinningMatrix(in int jointId, out mat3x4 skMatrix) {
   skMatrix[2] = texelFetch(uSkinningDatas, matrixId+2);
 }
 
-void skinning_LBS(in vec4 weights, inout vec4 v, inout vec3 n) {
+subroutine(skinning_subroutine)
+void skinning_LBS(in vec4 weights, inout vec3 v, inout vec3 n) {
   /// To allow less texture fetching, and thus better memory bandwith, skinning
   /// matrices are setup as 3x4 on the host (ie. transposed and last column removed)
-  /// Hence, Matrix / vector multiplication are "reversed".
+  /// Hence, matrix / vector multiplications are "reversed".
 
   // Retrieve skinning matrices
   mat3x4 jointMatrix[4];
@@ -114,44 +139,23 @@ void skinning_LBS(in vec4 weights, inout vec4 v, inout vec3 n) {
   getSkinningMatrix(inJointIndices.w, jointMatrix[3]);
 
   mat4x3 M;
-  
+  vec4 x_;
+
   // Position
-  M[0] = v * jointMatrix[0];
-  M[1] = v * jointMatrix[1];
-  M[2] = v * jointMatrix[2];
-  M[3] = v * jointMatrix[3];
-  v.xyz = M * weights;
+  x_ = vec4(v, 1.0f);
+  M[0] = x_ * jointMatrix[0];
+  M[1] = x_ * jointMatrix[1];
+  M[2] = x_ * jointMatrix[2];
+  M[3] = x_ * jointMatrix[3];
+  v = M * weights;
 
   // Normal
-  vec4 n_ = vec4(n, 0.0f);
-  M[0] = n_ * jointMatrix[0];
-  M[1] = n_ * jointMatrix[1];
-  M[2] = n_ * jointMatrix[2];
-  M[3] = n_ * jointMatrix[3];
+  x_ = vec4(n, 0.0f);
+  M[0] = x_ * jointMatrix[0];
+  M[1] = x_ * jointMatrix[1];
+  M[2] = x_ * jointMatrix[2];
+  M[3] = x_ * jointMatrix[3];
   n = M * weights;
-}
-
-
-///--------------------------------------------------------------------
-/// SKINNING
-///--------------------------------------------------------------------
-
-void calculate_skinning(inout vec4 position, inout vec3 normal) {
-  if (!(inJointWeight.x > 0.0f)) {
-    return;
-  }
-
-  vec4 weights   = vec4(inJointWeight.xyz, 0.0f);
-       weights.w = 1.0f - (weights.x + weights.y + weights.z);
-
-  /// TODO : add manual switching from the application
-#if 1
-  // Dual Quaternion Blend Skinning
-  skinning_DQBS(weights, position.xyz, normal);
-#else
-  // Linear Blend Skinning
-  skinning_LBS(weights, position, normal);
-#endif
 }
 
 ///--------------------------------------------------------------------
@@ -177,15 +181,15 @@ void calculate_blendshape(inout vec3 v, inout vec3 n) {
 
 void main() {
   // Input
-  vec4 position = vec4(inPosition, 1.0f);
+  vec3 position = inPosition;
   vec3 normal   = inNormal;
 
   // Processing
   calculate_skinning(position, normal);
-  calculate_blendshape(position.xyz, normal);
+  calculate_blendshape(position, normal);
 
   // Output
-  gl_Position   = uModelViewProjMatrix * position;
+  gl_Position   = uModelViewProjMatrix * vec4(position, 1.0f);
   OUT.normal    = normalize(uNormalMatrix * normal);
   OUT.texCoord  = inTexCoord;
 }
@@ -200,8 +204,8 @@ void main() {
 -- FS
 
 uniform sampler2D uDiffuseMap;
-uniform vec3 uDiffuseColor = vec3(1.0f);
-uniform vec3 uLightDir = normalize(vec3(-1.0f, 3.5f, 5.20f));
+uniform vec3 uDiffuseColor    = vec3(1.0f);
+uniform vec3 uLightDir        = normalize(vec3(-1.0f, 3.5f, 5.20f));
 uniform bool uEnableTexturing = false;
 uniform bool uEnableLighting  = true;
 

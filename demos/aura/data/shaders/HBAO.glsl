@@ -22,10 +22,8 @@ uniform  float uStrength; // only HBAO Y
 
 
 uniform sampler2D uTexLinDepth;                       // input pass 1 & 2
-
 writeonly uniform layout(r32f)  image2D uImgOutputX;  // output pass 1
 readonly  uniform layout(r32f)  image2D uImgAOX;      // input pass 2
-
 writeonly uniform layout(rg16f) image2D uImgOutputY;  // output pass 2
 
 //------------------------------------------------------------------------------
