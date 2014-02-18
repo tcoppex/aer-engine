@@ -91,6 +91,11 @@ void skinning_DQBS(in vec4 weights, inout vec3 v, inout vec3 n) {
   mat4 Ma, Mb;
   getDualQuaternions(Ma, Mb);
 
+  // Try to avoid antipodality by sticking joints in the same neighbourhood
+  weights.y *= sign(dot(Ma[0], Ma[1]));
+  weights.z *= sign(dot(Ma[0], Ma[2]));
+  weights.w *= sign(dot(Ma[0], Ma[3]));
+
   // Apply weights
   vec4 A = Ma * weights;  // real part
   vec4 B = Mb * weights;  // dual part
