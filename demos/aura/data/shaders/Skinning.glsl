@@ -48,9 +48,9 @@ out VDataBlock {
 ///--------------------------------------------------------------------
 
 void getDualQuaternions(out mat4 Ma, out mat4 Mb) {
-  ivec4 indices = 2*inJointIndices;
+  ivec4 indices = 2 * inJointIndices;
 
-  /// Retrieve non-dual (Ma) and dual (Mb) part of the dual-quaternions
+  /// Retrieve the real (Ma) and dual (Mb) part of the dual-quaternions
   Ma[0] = texelFetch(uSkinningDatas, indices.x+0);
   Mb[0] = texelFetch(uSkinningDatas, indices.x+1);
 
@@ -72,16 +72,16 @@ void skinning_DQBS(in vec4 weights, inout vec3 v, inout vec3 n) {
   vec4 A = Ma * weights;  // real part
   vec4 B = Mb * weights;  // dual part
 
-  float invNorm = 1.0f / length(A);
-  A *= invNorm;
-  B *= invNorm;
+  float invNormA = 1.0f / length(A);
+  A *= invNormA;
+  B *= invNormA;
 
   // Position
-  v += 2.0f*cross(A.xyz, cross(A.xyz, v) + A.w*v);              // Rotation
-  v += 2.0f*(A.w * B.xyz - B.w * A.xyz + cross(A.xyz, B.xyz));  // Translation
+  v += 2.0f * cross(A.xyz, cross(A.xyz, v) + A.w*v);              // Rotation
+  v += 2.0f * (A.w * B.xyz - B.w * A.xyz + cross(A.xyz, B.xyz));  // Translation
 
   // Normal
-  n += 2.0f*cross(A.xyz, cross(A.xyz, n) + A.w*n);
+  n += 2.0f * cross(A.xyz, cross(A.xyz, n) + A.w*n);
 }
 
 
@@ -89,43 +89,46 @@ void skinning_DQBS(in vec4 weights, inout vec3 v, inout vec3 n) {
 /// SKINNING : LINEAR BLENDING
 ///--------------------------------------------------------------------
 
-void getSkinningMatrix(in int jointId, out mat4 skMatrix) {
+void getSkinningMatrix(in int jointId, out mat3x4 skMatrix) {
   if (jointId == NO_JOINT) {
-    skMatrix = mat4(1.0f);
+    skMatrix = mat3x4(1.0f);
     return;
   }
 
-  const int matrixId = 4*jointId;
+  const int matrixId = 3*jointId;
   skMatrix[0] = texelFetch(uSkinningDatas, matrixId+0);
   skMatrix[1] = texelFetch(uSkinningDatas, matrixId+1);
   skMatrix[2] = texelFetch(uSkinningDatas, matrixId+2);
-  skMatrix[3] = texelFetch(uSkinningDatas, matrixId+3);
 }
 
 void skinning_LBS(in vec4 weights, inout vec4 v, inout vec3 n) {
-  mat4 M;
+  /// To allow less texture fetching, and thus better memory bandwith, skinning
+  /// matrices are setup as 3x4 on the host (ie. transposed and last column removed)
+  /// Hence, Matrix / vector multiplication are "reversed".
 
   // Retrieve skinning matrices
-  mat4 jointMatrix[4];    
+  mat3x4 jointMatrix[4];
   getSkinningMatrix(inJointIndices.x, jointMatrix[0]);
   getSkinningMatrix(inJointIndices.y, jointMatrix[1]);
   getSkinningMatrix(inJointIndices.z, jointMatrix[2]);
   getSkinningMatrix(inJointIndices.w, jointMatrix[3]);
 
+  mat4x3 M;
+  
   // Position
-  M[0] = jointMatrix[0] * v;
-  M[1] = jointMatrix[1] * v;
-  M[2] = jointMatrix[2] * v;
-  M[3] = jointMatrix[3] * v;
-  v = M * weights;
+  M[0] = v * jointMatrix[0];
+  M[1] = v * jointMatrix[1];
+  M[2] = v * jointMatrix[2];
+  M[3] = v * jointMatrix[3];
+  v.xyz = M * weights;
 
   // Normal
   vec4 n_ = vec4(n, 0.0f);
-  M[0] = jointMatrix[0] * n_;
-  M[1] = jointMatrix[1] * n_;
-  M[2] = jointMatrix[2] * n_;
-  M[3] = jointMatrix[3] * n_;
-  n = (M * weights).xyz;
+  M[0] = n_ * jointMatrix[0];
+  M[1] = n_ * jointMatrix[1];
+  M[2] = n_ * jointMatrix[2];
+  M[3] = n_ * jointMatrix[3];
+  n = M * weights;
 }
 
 
@@ -141,11 +144,14 @@ void calculate_skinning(inout vec4 position, inout vec3 normal) {
   vec4 weights   = vec4(inJointWeight.xyz, 0.0f);
        weights.w = 1.0f - (weights.x + weights.y + weights.z);
 
+  /// TODO : add manual switching from the application
+#if 1
   // Dual Quaternion Blend Skinning
-  //skinning_DQBS(weights, position.xyz, normal);
-
+  skinning_DQBS(weights, position.xyz, normal);
+#else
   // Linear Blend Skinning
   skinning_LBS(weights, position, normal);
+#endif
 }
 
 ///--------------------------------------------------------------------

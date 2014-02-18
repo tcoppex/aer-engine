@@ -10,6 +10,7 @@
 #include "aer/rendering/mapscreen.h"
 
 
+
 Application::Application(int argc, char* argv[]) :
   aer::Application(argc, argv),
   mCamera(nullptr),
@@ -107,6 +108,7 @@ void Application::init_shaders() {
     mProgram.mapscreen.add_shader(sp.get("MapScreen.FS"));
   AER_CHECK(mProgram.mapscreen.link());
 }
+
 
 void Application::init_scene() {
   mScene.character.init();
@@ -229,7 +231,6 @@ void Application::map_screen() {
   aer::DefaultSampler::LinearClampled().bind(1);
 
   mProgram.mapscreen.activate();
-
     mAOTexturePtr->bind(0);    
     mProgram.mapscreen.set_uniform("uAOTex", 0);
 
@@ -237,7 +238,6 @@ void Application::map_screen() {
     mProgram.mapscreen.set_uniform("uSceneTex", 1);
 
     aer::MapScreen::Draw();
-
   mProgram.mapscreen.deactivate();
 
   aer::Texture::UnbindAll(GL_TEXTURE_2D, 2);
