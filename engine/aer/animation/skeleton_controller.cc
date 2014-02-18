@@ -20,7 +20,7 @@ SkeletonController::SharedData_t SkeletonController::sShared;
 SkeletonProxy SkeletonController::sSkeletonProxy;
 
 
-void SkeletonController::SharedData_t::init() {
+void SkeletonController::SharedData_t::init(U32 tbo_elemsize) {
   if (bInit) {
     return;
   }
@@ -31,10 +31,10 @@ void SkeletonController::SharedData_t::init() {
     sample.joints.resize(kMaxJointsPerSkeleton);
   }
 
-  /// Skinning texture buffer
+  /// Texture buffer holding skinning datas [matrices or dual-quaternions]
   skinning.buffer.generate();
   skinning.buffer.bind(GL_TEXTURE_BUFFER);
-  U32 bytesize = kMaxJointsPerSkeleton * sizeof(Matrix4x4);
+  U32 bytesize = kMaxJointsPerSkeleton * tbo_elemsize;
   skinning.buffer.allocate(bytesize, GL_STREAM_DRAW);
   skinning.buffer.unbind();
 
@@ -78,43 +78,45 @@ bool SkeletonController::init(const std::string &skeleton_ref) {
   //------
 
   /// Outputs
-  mLocalPose.joints.resize(mSkeleton->numjoints());
-  mGlobalPoseMatrices.resize(mSkeleton->numjoints());
-  mSkinningMatrices.resize(mSkeleton->numjoints());
+  U32 njoints = mSkeleton->numjoints();
+  mLocalPose.joints.resize(njoints);
+  mGlobalPoseMatrices.resize(njoints);
+  mSkinningMatrices.resize(njoints); //
+  mDQuaternions.resize(njoints); //
 
   // Shared data
   AER_ASSERT(mSkeleton->numclips() <= kMaxClipsPerSkeleton);
   AER_ASSERT(mSkeleton->numjoints() <= kMaxJointsPerSkeleton);
-  sShared.init();
+  U32 tbo_elemsize = glm::max(sizeof(mSkinningMatrices[0]),sizeof(mDQuaternions[0]));
+  sShared.init(tbo_elemsize);
 
   return true;
 }
 
 void SkeletonController::update() {
   /// Activates each sequence's leaves on the blend tree
-  /// [TODO: set once by an Action State Machine each time a state is entered]
+  /// [TODO: set once by the Action State Machine each time a state is entered]
   mBlendTree.activate_leaves(true, mSequence); //
 
-  /// Compute weight for active leaves
+  /// 1) Compute weight for active leaves
   mBlendTree.evaluate(1.0f, mSequence);
 
 
-  /// 1) Compute the static pose of each contributing clips
+  /// 2) Compute the static pose of each contributing clips
   U32 active_count = compute_poses();
-
   if (active_count == 0u) {
     AER_WARNING("no animation clips provided");
     return;
   }
 
-  /// 2) Blend between poses to get a unique local pose
+  /// 3) Blend between poses to get a unique local pose
   blend_poses(active_count);
 
-  /// 3) Generate global pose matrices
+  /// 4) Generate the global pose matrices
   generate_global_pose_matrices();
 
-  /// 4) Generate the final skinning matrices
-  generate_skinning_matrices();
+  /// 5) Generate the final skinning datas
+  generate_skinning_datas();
 }
 
 U32 SkeletonController::compute_poses() {
@@ -141,8 +143,8 @@ void SkeletonController::blend_poses(U32 active_count) {
     return;
   }
 
-  /// Compute the local poses sample by blending each contributing samples.
-  /// (ie. flat weighted average)
+  /// Compute the localposes sample by blending each contributing samples;
+  /// (flat weighted average)
   /// Note : paralellizable (using a REDUCE operation)
 
   /// 1) Calculate the total weight for normalization
@@ -200,21 +202,41 @@ void SkeletonController::generate_global_pose_matrices() {
   }
 }
 
-void SkeletonController::generate_skinning_matrices() {
-  /// Note : parallelizable
+
+void SkeletonController::generate_skinning_datas() {
+  const U32 numSkinningData = mGlobalPoseMatrices.size(); 
   const Matrix4x4 *inverse_bind_matrices = mSkeleton->inverse_bind_matrices();
 
-  for(U32 i = 0u; i < mGlobalPoseMatrices.size(); ++i) {
-    mSkinningMatrices[i] = mGlobalPoseMatrices[i] * inverse_bind_matrices[i];
+# pragma omp parallel for schedule(guided) num_threads(4)
+  for(U32 i = 0u; i < numSkinningData; ++i) {
+    /// Generate skinning matrices
+    Matrix4x4 m = mGlobalPoseMatrices[i] * inverse_bind_matrices[i];
+    mSkinningMatrices[i] = Matrix3x4(glm::transpose(m));
+
+    /// Convert to Dual Quaternions
+    mDQuaternions[i] = DualQuaternion(mSkinningMatrices[i]);
   }
 
-  /// Upload to the shared skinning texture buffer
-  /// Note : if skinning matrices are not used locally, they could also be 
-  /// mapped directly.
+
+  /// Upload to the shared skinning texture buffer to the GPU
   DeviceBuffer &buffer = sShared.skinning.buffer;
   buffer.bind(GL_TEXTURE_BUFFER);
-  U32 bytesize = mGlobalPoseMatrices.size() * sizeof(mGlobalPoseMatrices[0]);
-  buffer.upload(0u, bytesize, mSkinningMatrices.data());
+  
+  U32 bytesize(0u);
+  F32 *data_ptr(nullptr);
+
+  if (bUseDQBS_) {
+    // DUAL QUATERNION BLENDING
+    bytesize = numSkinningData * sizeof(mDQuaternions[0u]);
+    data_ptr = reinterpret_cast<F32*>(mDQuaternions.data());
+  } else {
+    // LINEAR BLENDING
+    bytesize = numSkinningData * sizeof(mSkinningMatrices[0u]);
+    data_ptr = reinterpret_cast<F32*>(mSkinningMatrices.data());    
+  }
+
+  buffer.upload(0u, bytesize, data_ptr);
+
   buffer.unbind();
   CHECKGLERROR();
 }
@@ -269,6 +291,5 @@ bool ComputePose(const F32 global_time,
 }
 
 }  // namespace
-
 
 }  // namespace aer

@@ -41,7 +41,7 @@ class SkeletonController {
   void update();
 
   /// Return the buffer of skinning matrices
-  const Matrix4x4* skinning_matrices() const {
+  const Matrix3x4* skinning_matrices() const {
     return mSkinningMatrices.data();
   }
 
@@ -61,7 +61,7 @@ class SkeletonController {
 
   /// Buffers shared application-wised by skeleton controllers
   struct SharedData_t {
-    void init();
+    void init(U32);
 
     SampleBuffer_t  samples;
     TBO_t           skinning;
@@ -82,11 +82,11 @@ class SkeletonController {
   /// and store the final local pose to mLocalPose.
   void blend_poses(U32 active_count);
 
-  /// Generate the global pose matrices (eg. for post-processing)
+  /// Generate global pose matrices (eg. for post-processing)
   void generate_global_pose_matrices();
 
-  /// Generate the final skinning matrices, for rendering
-  void generate_skinning_matrices();
+  /// Generate final transformation datas for skinning
+  void generate_skinning_datas();
 
 
   /// Skeleton reference
@@ -98,8 +98,11 @@ class SkeletonController {
 
   /// Outputs
   AnimationSample_t      mLocalPose;
-  std::vector<Matrix4x4> mGlobalPoseMatrices;
-  std::vector<Matrix4x4> mSkinningMatrices;
+  std::vector<Matrix4x4> mGlobalPoseMatrices;   // should be [4x3]
+  
+  std::vector<Matrix3x4> mSkinningMatrices;
+  std::vector<DualQuaternion> mDQuaternions;    // TODO: set as buffer of float4
+  bool bUseDQBS_ = true;
 
 
   DISALLOW_COPY_AND_ASSIGN(SkeletonController);
