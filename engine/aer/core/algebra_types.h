@@ -9,7 +9,7 @@
 #define GLM_SWIZZLE
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
-
+#include "glm/gtx/dual_quaternion.hpp"
 
 namespace aer {
 
@@ -20,10 +20,12 @@ typedef glm::ivec3    Vector3i;
 typedef glm::vec4     Vector4;
 typedef glm::ivec4    Vector4i;
 typedef glm::mat3     Matrix3x3;
+typedef glm::mat3x4   Matrix3x4;
 typedef glm::mat4     Matrix4x4;
 typedef glm::mat4x3   Matrix4x3;
 
-typedef glm::quat     Quaternion;  //
+typedef glm::quat     Quaternion;     //
+typedef glm::dualquat DualQuaternion; // 
 
 }  // namespace aer
 
