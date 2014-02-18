@@ -45,6 +45,23 @@ void Character::update() {
   coeffnode->set_factor(s);
   //-------------------------------------
 
+  const aer::EventsHandler &ev = aer::EventsHandler::Get();
+
+  /// Switch between Dual Quaternion & Linear blend skinning
+  if (ev.key_pressed(aer::Keyboard::M)) {
+    aer::SkeletonController &skl_controller = skmModel_.skeleton_controller();
+    aer::SkinningMethod_t method = skl_controller.skinning_method();
+
+    if (method == aer::SKINNING_DQB) {
+      method = aer::SKINNING_LB;
+      printf("Skinning : Linear Blending\n");
+    } else if (method == aer::SKINNING_LB) {
+      method = aer::SKINNING_DQB;
+      printf("Skinning : Dual Quaternion\n");
+    }
+    skl_controller.set_skinning_method(method);
+  }
+
   //---
 
   skmModel_.update();
@@ -61,8 +78,10 @@ void Character::render(const aer::Camera &camera) {
   mProgram.set_uniform("uSkinningDatas", texUnit);
   ++texUnit;
   
-  // TODO : control the subroutine handle
+  // TODO : control the subroutine handle properly
   //mProgram.set_subroutine_uniform("uSkinning", skl_controller.skinning_method());
+  aer::U32 su_index = skl_controller.skinning_method();
+  glUniformSubroutinesuiv(GL_VERTEX_SHADER, 1, &su_index);
 
   CHECKGLERROR();
   // -------------------------------------------------------

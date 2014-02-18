@@ -259,6 +259,7 @@ void Application::help() {
   "[Z-Q-S-D + mouse] or [SixAxis pad] : control the camera." NEW_LINE
   "[Space] or [SixAxis start] : pause / resume the clock." NEW_LINE
   "[A] : toggle HBAO." NEW_LINE
+  "[M] : switch between Dual Quaternion & Linear blend skinning." NEW_LINE
   "[F] : display FPS." NEW_LINE
   "[W] : wireframe mode." NEW_LINE
   "[H] : display this help." NEW_LINE
