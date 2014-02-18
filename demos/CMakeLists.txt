@@ -11,6 +11,12 @@ set(CMAKE_CXX_FLAGS          "-std=gnu++11")
 set(CMAKE_CXX_FLAGS_RELEASE  "-O2 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG    "-O0 -g -Werror -pedantic")
 
+find_package(OpenMP)
+if (OPENMP_FOUND)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+endif()
 
 # -------------
 # - LIBRARIES -
@@ -26,7 +32,8 @@ set(GLEW_LIBRARY ${AER_LIBRARY_DIRS}/libGLEW.a)
 find_package(OpenGL)
 find_package(SFML)
 
-set(LINKED_LIBRARIES ${AER_LIBRARY}
+set(LINKED_LIBRARIES ${LINKED_LIBRARIES}
+                     ${AER_LIBRARY}
                      ${GLEW_LIBRARY}
                      ${OPENGL_gl_LIBRARY}
                      sfml-window

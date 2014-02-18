@@ -9,7 +9,6 @@ set(CMAKE_CXX_FLAGS          "-std=gnu++11")
 set(CMAKE_CXX_FLAGS_RELEASE  "-O2 -DNDEBUG") #-msse (to enable SSE instruction)
 set(CMAKE_CXX_FLAGS_DEBUG    "-O0 -g -Werror -pedantic")
 
-
 set(THIRDPARTIES ${CMAKE_SOURCE_DIR}/thirdparty)
 include_directories(${THIRDPARTIES})
 
