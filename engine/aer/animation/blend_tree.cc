@@ -41,8 +41,8 @@ void BlendTree::evaluate(const F32 factor, Sequence_t& sequence) {
 
 void BlendTree::activate_leaves(bool bEnable, Sequence_t& sequence) {
   AER_ASSERT(nullptr != mRoot);
-  
-  AER_WARNING("BlendTree's evaluate & active_leaves are costly !");
+
+  AER_WARNING("[TODO] profile BlendTree's evaluate & active_leaves.");
 
   for (auto &leave : mLeaveMap) {
     bool bFound = false;

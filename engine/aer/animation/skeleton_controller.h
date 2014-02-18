@@ -20,6 +20,13 @@
 
 namespace aer {
 
+enum SkinningMethod_t {
+  SKINNING_LB,
+  SKINNING_DQB,
+
+  kNumSkinningMethod
+};
+
 /// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + 
 ///
 /// Handle the skeleton animation pipeline
@@ -55,11 +62,19 @@ class SkeletonController {
     return mBlendTree;
   }
 
+  SkinningMethod_t skinning_method() const {
+    return mSkinningMethod;
+  }
+
+  void set_skinning_method(SkinningMethod_t method) {
+    mSkinningMethod = method;
+  }
+
 
  private:
   typedef std::vector<AnimationSample_t> SampleBuffer_t;
 
-  /// Buffers shared application-wised by skeleton controllers
+  /// Datas shared application-wised by skeleton controllers
   struct SharedData_t {
     void init(U32);
 
@@ -68,11 +83,14 @@ class SkeletonController {
     bool            bInit = false;
   };
 
+  //---
+
   static SharedData_t sShared;
   
   /// Proxy to load skeleton
   static SkeletonProxy sSkeletonProxy;
 
+  //---
 
   /// Compute the static pose of each contributing clips.
   /// Return the number of active clips.
@@ -88,21 +106,21 @@ class SkeletonController {
   /// Generate final transformation datas for skinning
   void generate_skinning_datas();
 
+  //---
 
   /// Skeleton reference
   Skeleton *mSkeleton = nullptr;
 
   /// Inputs
-  Sequence_t mSequence;
-  BlendTree mBlendTree; //
+  Sequence_t        mSequence;
+  BlendTree         mBlendTree; //
+  SkinningMethod_t  mSkinningMethod = SKINNING_DQB;
 
   /// Outputs
-  AnimationSample_t      mLocalPose;
-  std::vector<Matrix4x4> mGlobalPoseMatrices;   // should be [4x3]
-  
-  std::vector<Matrix3x4> mSkinningMatrices;
-  std::vector<DualQuaternion> mDQuaternions;    // TODO: set as buffer of float4
-  bool bUseDQBS_ = true;
+  AnimationSample_t           mLocalPose;
+  std::vector<Matrix4x4>      mGlobalPoseMatrices;
+  std::vector<Matrix3x4>      mSkinningMatrices;
+  std::vector<DualQuaternion> mDQuaternions;
 
 
   DISALLOW_COPY_AND_ASSIGN(SkeletonController);

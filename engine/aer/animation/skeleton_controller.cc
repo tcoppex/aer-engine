@@ -149,7 +149,7 @@ void SkeletonController::blend_poses(U32 active_count) {
 
   /// 1) Calculate the total weight for normalization
   F32 sum_weights = 0.0f;
-  for(const auto &sc : mSequence) {
+  for (const auto &sc : mSequence) {
     if (sc.bEnable) {
       sum_weights += sc.weight;
     }
@@ -159,7 +159,7 @@ void SkeletonController::blend_poses(U32 active_count) {
   /// 2) Copy the first weighted action as base
   SequenceIterator_t it = mSequence.begin();
   F32 w = it->weight / sum_weights;
-  for(U32 i = 0u; i < mLocalPose.joints.size(); ++i) {
+  for (U32 i = 0u; i < mLocalPose.joints.size(); ++i) {
     const auto &src = samples[0u].joints[i];
           auto &dst = mLocalPose.joints[i];
     
@@ -170,10 +170,10 @@ void SkeletonController::blend_poses(U32 active_count) {
 
   /// 3) Add the rest
   U32 sid = 1u;
-  for(it = ++it; sid < active_count; ++it, ++sid) {
+  for (it = ++it; sid < active_count; ++it, ++sid) {
     w = it->weight / sum_weights;
 
-    for(U32 i = 0u; i < mLocalPose.joints.size(); ++i) {
+    for (U32 i = 0u; i < mLocalPose.joints.size(); ++i) {
       const auto &src = samples[sid].joints[i];
             auto &dst = mLocalPose.joints[i];
 
@@ -188,7 +188,7 @@ void SkeletonController::blend_poses(U32 active_count) {
 void SkeletonController::generate_global_pose_matrices() {
   const I32 *parent_ids = mSkeleton->parent_ids();
 
-  for(U32 i = 0u; i < mGlobalPoseMatrices.size(); ++i) {
+  for (U32 i = 0u; i < mGlobalPoseMatrices.size(); ++i) {
     const auto &joint = mLocalPose.joints[i];
 
     mGlobalPoseMatrices[i]  = glm::translate(glm::mat4(1.0f), joint.vTranslation);
@@ -208,7 +208,7 @@ void SkeletonController::generate_skinning_datas() {
   const Matrix4x4 *inverse_bind_matrices = mSkeleton->inverse_bind_matrices();
 
 # pragma omp parallel for schedule(guided) num_threads(4)
-  for(U32 i = 0u; i < numSkinningData; ++i) {
+  for (U32 i = 0u; i < numSkinningData; ++i) {
     /// Generate skinning matrices
     Matrix4x4 m = mGlobalPoseMatrices[i] * inverse_bind_matrices[i];
     mSkinningMatrices[i] = Matrix3x4(glm::transpose(m));
@@ -225,7 +225,7 @@ void SkeletonController::generate_skinning_datas() {
   U32 bytesize(0u);
   F32 *data_ptr(nullptr);
 
-  if (bUseDQBS_) {
+  if (SKINNING_DQB == skinning_method()) {
     // DUAL QUATERNION BLENDING
     bytesize = numSkinningData * sizeof(mDQuaternions[0u]);
     data_ptr = reinterpret_cast<F32*>(mDQuaternions.data());
@@ -249,8 +249,8 @@ void LerpSamples(const AnimationSample_t &s1,
                  const F32 factor,
                  AnimationSample_t &dst_sample) 
 {
-  /// Note : parallelizable
-  for(U32 i = 0u; i < dst_sample.joints.size(); ++i) {
+# pragma omp parallel for schedule(guided) num_threads(4)
+  for (U32 i = 0u; i < dst_sample.joints.size(); ++i) {
     JointPose_t &dst = dst_sample.joints[i];
 
     const JointPose_t &J1 = s1.joints[i];
