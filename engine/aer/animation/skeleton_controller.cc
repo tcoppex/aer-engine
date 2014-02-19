@@ -168,17 +168,23 @@ void SkeletonController::blend_poses(U32 active_count) {
     dst.fScale       = w * src.fScale;
   }
 
-  /// 3) Add the rest
+
+  /// 3) Blend the rest
   U32 sid = 1u;
   for (it = ++it; sid < active_count; ++it, ++sid) {
     w = it->weight / sum_weights;
+
+    // Cope with antipodality by checking quaternion neighbourhood
+    // (could be improved by checking rest pose)
+    F32 sign_q = glm::sign(glm::dot(samples[sid].joints.begin()->qRotation,
+                                    samples[sid].joints.end()->qRotation));
+    F32 w_q = sign_q * w;
 
     for (U32 i = 0u; i < mLocalPose.joints.size(); ++i) {
       const auto &src = samples[sid].joints[i];
             auto &dst = mLocalPose.joints[i];
 
-      // Note : glm does not handle operator+= for quaternions natively
-      dst.qRotation     = w * src.qRotation + dst.qRotation;
+      dst.qRotation     = w_q * src.qRotation + dst.qRotation;
       dst.vTranslation += w * src.vTranslation;
       dst.fScale       += w * src.fScale;
     }

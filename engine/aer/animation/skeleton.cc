@@ -127,7 +127,7 @@ void Skeleton::init_animations(const SKAFile& skaFile) {
 
         const SKAFile::TQuaternion &Q = pFrames[ska_frameid].qRotation;
         const SKAFile::TVector     &V = pFrames[ska_frameid].vTranslate;
-        const F32              S = pFrames[ska_frameid].fScale;
+        const F32                   S = pFrames[ska_frameid].fScale;
         
         joint.qRotation    = Quaternion(Q.W, Q.X, Q.Y, Q.Z);
         joint.vTranslation = Vector3(V.X, V.Y, V.Z);
