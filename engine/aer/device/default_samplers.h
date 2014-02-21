@@ -34,6 +34,18 @@ class DefaultSampler {
   }
 
   static
+  const Sampler& NearestRepeat() {
+    static bool bInit = false;
+    if (!bInit) {
+      kNearestRepeat.generate();
+      kNearestRepeat.set_filters(GL_NEAREST, GL_NEAREST);
+      kNearestRepeat.set_wraps(GL_REPEAT, GL_REPEAT, GL_REPEAT);
+      bInit = true;
+    }
+    return kNearestRepeat;
+  }
+
+  static
   const Sampler& LinearClampled() {
     static bool bInit = false;
     if (!bInit) {
@@ -72,6 +84,7 @@ class DefaultSampler {
 
  private:
   static Sampler kNearestClamped;
+  static Sampler kNearestRepeat;
   static Sampler kLinearClamped;
   static Sampler kLinearRepeat;
   static Sampler kAnisoRepeat;

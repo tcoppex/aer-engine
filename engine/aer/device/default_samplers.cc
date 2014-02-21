@@ -9,8 +9,11 @@
 namespace aer {
 
 Sampler DefaultSampler::kNearestClamped;
+Sampler DefaultSampler::kNearestRepeat;
+
 Sampler DefaultSampler::kLinearClamped;
 Sampler DefaultSampler::kLinearRepeat;
+
 Sampler DefaultSampler::kAnisoRepeat;
 
 }
