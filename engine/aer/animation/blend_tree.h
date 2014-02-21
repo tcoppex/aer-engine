@@ -74,7 +74,7 @@ template<typename T>
 T* BlendTree::find_node(const std::string& name) {
   NodeMapIterator_t it = mNodeMap.find(name);
   if (it != mNodeMap.end()) {
-    return static_cast<T*>(it->second);
+    return dynamic_cast<T*>(it->second);
   }
   return nullptr;
 }

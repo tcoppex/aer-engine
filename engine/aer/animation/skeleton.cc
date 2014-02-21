@@ -30,10 +30,8 @@ void Skeleton::init(const SKAFile& skaFile) {
 }
 
 void Skeleton::init_armature(const SKAFile& skaFile) {
-
   const SKAFile::TBone* const pBones = skaFile.bones();
   const U32 numjoints = skaFile.numbones();
-
 
   mJoint.names.resize(numjoints);
   mJoint.parent_ids.resize(numjoints);

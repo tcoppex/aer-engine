@@ -22,9 +22,9 @@ namespace aer {
 /// Pose transformation for a joint
 /// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~
 struct JointPose_t {
-  Quaternion   qRotation;
-  Vector3      vTranslation;
-  F32          fScale;
+  Quaternion   qRotation    = Quaternion(1.0f, 0.0f, 0.0f, 0.0f);
+  Vector3      vTranslation = Vector3(0.0f);
+  F32          fScale       = 1.0f;
 };
 
 /// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~
@@ -73,7 +73,7 @@ struct Expression_t : Action_t {
   }
 
   F32 clip_duration;
-  bool     bManualBypass;
+  bool bManualBypass;
 
   std::vector<U32> indices;
 };

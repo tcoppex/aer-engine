@@ -133,22 +133,26 @@ U32 SkeletonController::compute_poses() {
 }
 
 void SkeletonController::blend_poses(U32 active_count) {
+
   SampleBuffer_t &samples = sShared.samples;
+
+  const U32 kNumJoints = mLocalPose.joints.size();
 
   /// Bypass the weighting if their is only one action
   if (active_count == 1u) {
     std::copy(samples[0u].joints.begin(), 
-              samples[0u].joints.begin() + mLocalPose.joints.size(),
+              samples[0u].joints.begin() + kNumJoints,
               mLocalPose.joints.begin());
     return;
   }
 
-  /// Compute the localposes sample by blending each contributing samples;
-  /// (flat weighted average)
-  /// Note : paralellizable (using a REDUCE operation)
+  /// Compute local poses by blending each contributing samples by the factor
+  /// previously calculate by the blendtree. Supposed blending associativity.
+  /// (ie. flat weighted average)
 
   /// 1) Calculate the total weight for normalization
   F32 sum_weights = 0.0f;
+# pragma omp parallel for reduction(+:sum_weights) schedule(static) num_threads(4)
   for (const auto &sc : mSequence) {
     if (sc.bEnable) {
       sum_weights += sc.weight;
@@ -156,10 +160,12 @@ void SkeletonController::blend_poses(U32 active_count) {
   }
   sum_weights = (sum_weights == 0.0f) ? 1.0f : sum_weights;
 
+
   /// 2) Copy the first weighted action as base
   SequenceIterator_t it = mSequence.begin();
   F32 w = it->weight / sum_weights;
-  for (U32 i = 0u; i < mLocalPose.joints.size(); ++i) {
+# pragma omp parallel for schedule(static) num_threads(4)
+  for (U32 i = 0u; i < kNumJoints; ++i) {
     const auto &src = samples[0u].joints[i];
           auto &dst = mLocalPose.joints[i];
     
@@ -173,20 +179,27 @@ void SkeletonController::blend_poses(U32 active_count) {
   U32 sid = 1u;
   for (it = ++it; sid < active_count; ++it, ++sid) {
     w = it->weight / sum_weights;
+    AnimationSample_t& sample = samples[sid];
 
     // Cope with antipodality by checking quaternion neighbourhood
-    // (could be improved by checking rest pose)
-    F32 sign_q = glm::sign(glm::dot(samples[sid].joints.begin()->qRotation,
-                                    samples[sid].joints.end()->qRotation));
-    F32 w_q = sign_q * w;
+    F32 sign_q = glm::sign(glm::dot(sample.joints[0].qRotation, 
+                                    sample.joints[kNumJoints-1u].qRotation));
+    F32 w_q    = sign_q * w;
 
-    for (U32 i = 0u; i < mLocalPose.joints.size(); ++i) {
-      const auto &src = samples[sid].joints[i];
+    // [could swap the 2 loops and do 3 reduces operations instead]
+#   pragma omp parallel for schedule(static) num_threads(4)
+    for (U32 i = 0u; i < kNumJoints; ++i) {
+      const auto &src = sample.joints[i];
             auto &dst = mLocalPose.joints[i];
 
-      dst.qRotation     = w_q * src.qRotation + dst.qRotation;
-      dst.vTranslation += w * src.vTranslation;
-      dst.fScale       += w * src.fScale;
+      dst.qRotation    += w_q * src.qRotation;
+      dst.vTranslation += w   * src.vTranslation;
+      dst.fScale       += w   * src.fScale;
+    }
+
+    // Normalize quaternion lerping
+    for (auto &joint : mLocalPose.joints) {
+      joint.qRotation /= glm::length(joint.qRotation);
     }
   }
 }
@@ -213,18 +226,18 @@ void SkeletonController::generate_skinning_datas() {
   const U32 numSkinningData = mGlobalPoseMatrices.size(); 
   const Matrix4x4 *inverse_bind_matrices = mSkeleton->inverse_bind_matrices();
 
-# pragma omp parallel for schedule(guided) num_threads(4)
+# pragma omp parallel for schedule(static) num_threads(4)
   for (U32 i = 0u; i < numSkinningData; ++i) {
-    /// Generate skinning matrices
+    // generate skinning matrices
     Matrix4x4 m = mGlobalPoseMatrices[i] * inverse_bind_matrices[i];
     mSkinningMatrices[i] = Matrix3x4(glm::transpose(m));
 
-    /// Convert to Dual Quaternions
+    // convert to Dual Quaternions
     mDQuaternions[i] = DualQuaternion(mSkinningMatrices[i]);
   }
 
 
-  /// Upload to the shared skinning texture buffer to the GPU
+  /// Upload to the shared skinning texture buffer (device)
   DeviceBuffer &buffer = sShared.skinning.buffer;
   buffer.bind(GL_TEXTURE_BUFFER);
   
@@ -242,8 +255,8 @@ void SkeletonController::generate_skinning_datas() {
   }
 
   buffer.upload(0u, bytesize, data_ptr);
-
   buffer.unbind();
+
   CHECKGLERROR();
 }
 
@@ -255,14 +268,18 @@ void LerpSamples(const AnimationSample_t &s1,
                  const F32 factor,
                  AnimationSample_t &dst_sample) 
 {
-# pragma omp parallel for schedule(guided) num_threads(4)
-  for (U32 i = 0u; i < dst_sample.joints.size(); ++i) {
+  const U32 nJoints = s1.joints.size();
+
+# pragma omp parallel for schedule(static) num_threads(4)
+  for (U32 i = 0u; i < nJoints; ++i) {
     JointPose_t &dst = dst_sample.joints[i];
 
+    AER_CHECK(s1.joints.size() > i);
+    AER_CHECK(s2.joints.size() > i);
     const JointPose_t &J1 = s1.joints[i];
     const JointPose_t &J2 = s2.joints[i];
 
-    // For quaternions, use shortMix (slerp) or fastMix (nlerp) but NOT mix
+    // for quaternions, use shortMix (slerp) or fastMix (nlerp) but NOT mix
     dst.qRotation    = glm::fastMix(J1.qRotation,J2.qRotation,    factor);
     dst.vTranslation = glm::mix(J1.vTranslation, J2.vTranslation, factor);
     dst.fScale       = glm::mix(J1.fScale,       J2.fScale,       factor);
@@ -282,12 +299,12 @@ bool ComputePose(const F32 global_time,
 
   const AnimationClip_t *clip = static_cast<AnimationClip_t*>(sequence_clip.action_ptr);
 
-  // Found the frame boundaries
+  /// Found the frame boundaries
   F32 lerp_frame = local_time * clip->framerate;
   U32 frame      = static_cast<U32>(lerp_frame) % clip->numframes;
   U32 next_frame = (frame + 1u) % clip->numframes;
 
-  /// -- Compute the correct time sample for the pose
+  /// Compute the correct time sample for the pose
   const AnimationSample_t &s1 = clip->samples[frame];
   const AnimationSample_t &s2 = clip->samples[next_frame];
   F32 lerp_factor = lerp_frame - frame;

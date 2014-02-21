@@ -22,6 +22,10 @@ BlendShape::~BlendShape() {
     tbo.buffer.release();
     tbo.texture.release();
   }
+  for (auto& e : mExpressions) {
+    AER_SAFE_DELETEV(e.pName);
+  }
+  mExpressions.clear();
 }
 
 void BlendShape::init(const SKMFile &skmFile) {
