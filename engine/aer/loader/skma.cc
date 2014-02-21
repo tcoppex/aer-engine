@@ -30,22 +30,22 @@ void ReadHeader(FILE *fd, aer::ChunkHeader_t *pCH) {
   )
 }
 
-void ReadData(FILE *fd, const aer::ChunkHeader_t &ch, void **data) {
+bool ReadData(FILE *fd, const aer::ChunkHeader_t &ch, void **data) {
   if (ch.dataCount == 0u) {
     fprintf(stderr, "No data read for %s.\n", ch.id);
-    return;
+    return false;
   }
 
   if (data == nullptr) {
     fseek(fd, ch.dataCount*ch.dataSize, SEEK_CUR);
-    return;
+    return true;
   }
 
   *data = calloc(ch.dataCount, ch.dataSize);
   AER_CHECK(*data != nullptr);
 
   size_t nread = fread(*data, ch.dataSize, ch.dataCount, fd);
-  AER_CHECK(nread == ch.dataCount);
+  return nread == ch.dataCount;
 }
 
 aer::U32 ReadLine(FILE* fd, char buffer[], const aer::U32 N)
@@ -146,7 +146,7 @@ SKMFile::~SKMFile() {
   AER_SAFE_FREE(bone_weights_);
   AER_SAFE_FREE(skey_infos_);
   AER_SAFE_FREE(skey_datas_);
-  AER_SAFE_FREE(skey_infos_);
+  AER_SAFE_FREE(ska_infos_);
 }
 
 bool SKMFile::load(const char* filename) {

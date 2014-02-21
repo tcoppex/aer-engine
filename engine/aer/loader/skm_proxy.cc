@@ -111,6 +111,7 @@ void SKMProxy::init_mesh(const SKMFile& skmFile, Mesh& mesh) {
 
 void SKMProxy::init_mesh_vertices(const SKMFile &skmFile, Mesh &mesh) {
   const U32 nvertices = skmFile.numvertices();
+  const U32 npoints   = skmFile.numpoints();
 
   /// Setup DEVICE vertex buffer
   DeviceBuffer &vbo = mesh.vbo();
@@ -131,7 +132,7 @@ void SKMProxy::init_mesh_vertices(const SKMFile &skmFile, Mesh &mesh) {
     UPTR baseoffset    = reinterpret_cast<UPTR>(d_vertices);
 
     /// Compute normals
-    std::vector<Vector3> normals(nvertices);
+    std::vector<Vector3> normals(npoints);
     skmautils::ComputeNormals(skmFile, normals);
 
     F32 *d_position    = reinterpret_cast<F32*>(baseoffset + offset.position);
