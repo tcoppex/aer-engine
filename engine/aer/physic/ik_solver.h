@@ -41,6 +41,8 @@ class IKSolver {
   void init(IKChain *pIKChain);
 
   /// Resolve the ik system for the given targets
+  /// If there is more end effector than targets, remaining effectors used
+  /// the last targets.
   void update(const Vector3 targets[], U32 numtarget);
 
 

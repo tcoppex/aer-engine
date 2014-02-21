@@ -65,7 +65,7 @@ void IKSolver::setup_jacobian(const Vector3 targets[], U32 numtarget) {
 
     // retrieve the end effector's target
     U32 ee_id = (*n)->type_id();
-    U32 target_id = glm::min(ee_id, numtarget);
+    U32 target_id = glm::min(ee_id, numtarget-1u);
     const Vector3& target   = targets[target_id];
     const Vector3& n_pos_ws = (*n)->position_ws();
 
