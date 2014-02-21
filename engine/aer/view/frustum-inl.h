@@ -53,8 +53,7 @@ Frustum::Frustum(F32 fov, F32 aspectRatio, F32 zNear, F32 zFar)
 {}
 
 const Matrix4x4& Frustum::projection_matrix() const {
-  AER_ASSERT(!bRebuild_);
-  return projection_matrix_;
+  return const_cast<Frustum*>(this)->projection_matrix();
 }
 
 const Matrix4x4& Frustum::projection_matrix() {
@@ -63,8 +62,7 @@ const Matrix4x4& Frustum::projection_matrix() {
 }
 
 const Matrix4x4& Frustum::inverse_projection_matrix() const {
-  AER_ASSERT(!bRebuildInverse_);
-  return inverse_projection_matrix_;
+  return const_cast<Frustum*>(this)->inverse_projection_matrix();
 }
 
 const Matrix4x4& Frustum::inverse_projection_matrix() {

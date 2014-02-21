@@ -26,9 +26,10 @@ namespace aer {
 /// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + 
 class Camera : public View3DInterface {
  public:
+  Camera() = default;
   inline Camera(const View& view, const Frustum& frustum);
 
-  virtual void update() {}
+  virtual void update() {build();}
 
   /// Getters
   inline const Vector3& position()  const;

@@ -34,8 +34,7 @@ const Vector3& View::up() const {
 }
 
 const Matrix4x4& View::view_matrix() const {
-  AER_ASSERT(!is_dirty());
-  return view_matrix_;
+  return const_cast<View*>(this)->view_matrix();
 }
 
 const Matrix4x4& View::view_matrix() {

@@ -28,8 +28,7 @@ const Vector3& Camera::up() const {
 }
 
 const Matrix4x4& Camera::view_matrix() const {
-  AER_ASSERT(bRebuild_ || !view_.is_dirty());
-  return view_.view_matrix();
+  return const_cast<Camera*>(this)->view_matrix();
 }
 
 const Matrix4x4& Camera::view_matrix() {
@@ -38,8 +37,7 @@ const Matrix4x4& Camera::view_matrix() {
 }
 
 const Matrix4x4& Camera::projection_matrix() const {
-  AER_ASSERT(bRebuild_ || !frustum_.is_dirty());
-  return frustum_.projection_matrix();
+  return const_cast<Camera*>(this)->projection_matrix();
 }
 
 const Matrix4x4& Camera::projection_matrix() {
@@ -56,8 +54,7 @@ const Frustum& Camera::frustum() const {
 }
 
 const Matrix4x4& Camera::view_projection_matrix() const {
-  AER_ASSERT(!is_dirty());
-  return view_projection_matrix_;
+  return const_cast<Camera*>(this)->view_projection_matrix();
 }
 
 const Matrix4x4& Camera::view_projection_matrix() {
