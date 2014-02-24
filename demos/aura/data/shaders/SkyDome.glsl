@@ -10,15 +10,17 @@
 -- VS
 
 // IN
-layout(location = 0) in vec4 inPosition;
+layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec2 inTexCoord;
 
 // OUT
-out vec2 vTexCoord1;
-out vec2 vTexCoord2;
-out float vIntensity;
-out float vIntensitySqrd;
-out vec3 vPosition;
+out VDataBlock {
+  vec2  texcoord1;
+  vec2  texcoord2;
+  float intensity;
+  float intensity_sqr;
+  vec3  position;
+} OUT;
 
 // UNIFORM
 uniform mat4 uModelViewProjMatrix;
@@ -26,22 +28,21 @@ uniform float uSkyClock;
 
 
 void main() {
-  vTexCoord1 = inTexCoord + uSkyClock * vec2(0.33f, 0.66f);
-  vTexCoord1 *= 2.5f;
+  OUT.texcoord1  = inTexCoord + uSkyClock * vec2(0.33f, 0.66f);
+  OUT.texcoord1 *= 2.5f;
   
-  vTexCoord2 = inTexCoord + uSkyClock * vec2(1.33f, 1.66f);
-  vTexCoord2 *= 3.5f;
+  OUT.texcoord2  = inTexCoord + uSkyClock * vec2(1.33f, 1.66f);
+  OUT.texcoord2 *= 3.5f;
   
   // This can be precomputed  
-  vIntensity = mix(0.370f, 0.610f, inPosition.y);
-  vIntensitySqrd = vIntensity * vIntensity;
+  OUT.intensity     = mix(0.370f, 0.610f, inPosition.y);
+  OUT.intensity_sqr = OUT.intensity * OUT.intensity;
   
   // decrease level to hide the limit
-  vec4 position = inPosition;
-  position.y -= 0.45f;
+  OUT.position    = inPosition;
+  OUT.position.y -= 0.45f;
   
-  gl_Position = uModelViewProjMatrix * position;
-  vPosition = position.xyz;
+  gl_Position  = uModelViewProjMatrix * vec4(OUT.position, 1.0f);
 }
 
 --
@@ -53,11 +54,13 @@ void main() {
 
 
 // IN
-in vec3 vPosition;
-in vec2 vTexCoord1;
-in vec2 vTexCoord2;
-in float vIntensitySqrd;
-in float vIntensity;
+in VDataBlock {
+  vec2  texcoord1;
+  vec2  texcoord2;
+  float intensity;
+  float intensity_sqr;
+  vec3  position;
+} IN;
 
 // OUT
 layout(location = 0) out vec4 fragColor;
@@ -68,26 +71,26 @@ uniform vec3 uSkyColor;
 
 
 void main() {  
-  vec3 sky1 = texture(uSkyTex, vTexCoord1).rgb;
-  vec3 sky2 = texture(uSkyTex, vTexCoord2).rgb;
-  
+  vec3 sky1 = texture(uSkyTex, IN.texcoord1).rgb;
+  vec3 sky2 = texture(uSkyTex, IN.texcoord2).rgb;
+
   vec3 cloud1 = sky1 + sky2;
   vec3 cloud2 = sky1 * sky2;
 
 
   // Smooth out the effect (on border)
-  float shadeOut = (1.0f - vPosition.y) * dot(vPosition, vPosition);
+  float shadeOut = (1.0f - IN.position.y) * dot(IN.position, IN.position);
         shadeOut = smoothstep(0.0f, 1.0f, shadeOut);
-  
-  vec3 cloudColor = mix(cloud1, cloud2, shadeOut);  
-       cloudColor *= vIntensitySqrd;
+
+  vec3 cloudColor = mix(cloud1, cloud2, shadeOut);
+       cloudColor *= IN.intensity_sqr;
   
   vec3 skyColor = uSkyColor;
-       skyColor.rg *= (1.0f - vIntensity);
-       skyColor.b  *= vIntensity;
- 
+       skyColor.rg *= (1.0f - IN.intensity);
+       skyColor.b  *= IN.intensity;
+
   fragColor.rgb = skyColor * (1.0f - cloudColor.r) + cloudColor;
-  
+
   // In the deferred pipeline, an alpha of 0 means the light will not be computed
   // for it.
   fragColor.a = 0.0f;

@@ -57,10 +57,10 @@ void HBAOPass::process(aer::Texture2D **output_ao_texture_pptr,
   AER_ASSERT(nullptr != mInputDepthTex);
 
 
-  update_parameters(frustum);
-
   mFBO.bind(GL_DRAW_FRAMEBUFFER);
     glClear(GL_COLOR_BUFFER_BIT);
+
+    update_parameters(frustum);
     linearize_depth();
     launch_kernel_HBAO();
     launch_kernel_blurAO();

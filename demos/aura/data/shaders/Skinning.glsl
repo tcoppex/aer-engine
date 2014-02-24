@@ -91,10 +91,8 @@ void skinning_DQBS(in vec4 weights, inout vec3 v, inout vec3 n) {
   mat4 Ma, Mb;
   getDualQuaternions(Ma, Mb);
 
-  // Try to avoid antipodality by sticking joints in the same neighbourhood
-  weights.y *= sign(dot(Ma[0], Ma[1]));
-  weights.z *= sign(dot(Ma[0], Ma[2]));
-  weights.w *= sign(dot(Ma[0], Ma[3]));
+  // Handles antipodality by sticking joints in the same neighbourhood
+  weights.xyz *= sign(Ma[3] * mat3x4(Ma));
 
   // Apply weights
   vec4 A = Ma * weights;  // real part
@@ -175,7 +173,9 @@ void calculate_blendshape(inout vec3 v, inout vec3 n) {
     int     lut_id = gl_VertexID * int(uNumBlendShape) + index;
     int  target_id = texelFetch(uBS_LUT, lut_id);
 
+    // Position
     v += weight * texelFetch(uBS_data, target_id).xyz;
+    // Normal [todo]
     //n += weight * texelFetch(uBS_data, 2*target_id + 1);
   }
 }

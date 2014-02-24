@@ -10,7 +10,6 @@
 #include "aer/rendering/mapscreen.h"
 
 
-
 Application::Application(int argc, char* argv[]) :
   aer::Application(argc, argv),
   mCamera(nullptr),
@@ -25,15 +24,15 @@ Application::~Application() {
 void Application::init() {
   /// Window
   aer::Display_t display(1280, 720);
+  //display.msaa_level = 4u;
   create_window(display, "aura");
 
   // Enable fps control
   set_fps_control(true);
   set_fps_limit(60u);
 
-
   /// Camera
-  aer::View view(aer::Vector3(0.0f, 10.0f, 5.0f),
+  aer::View view(aer::Vector3(0.0f, 10.0f, 7.0f),
                  aer::Vector3(0.0f, 9.0f, 0.0f),
                  aer::Vector3(0.0f, 1.0f, 0.0f));
 
@@ -43,10 +42,18 @@ void Application::init() {
   mCamera = new aer::FreeCamera(view, frustum);
   mCamera->set_motion_factor(0.20f);
   mCamera->set_rotation_factor(0.15f);
-  mCamera->enable_motion_noise(false);
+  mCamera->enable_motion_noise(true);
 
   /// OpenGL settings
   glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
+
+  /// The post-process textures & FBO must be set as MULTISAMPLE
+  /// for this to works
+  if (display.msaa_level > 1u) {
+    glEnable(GL_MULTISAMPLE);
+  } else {
+    glDisable(GL_MULTISAMPLE);
+  }
 
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LEQUAL);
@@ -113,11 +120,15 @@ void Application::init_shaders() {
 void Application::init_scene() {
   mScene.character.init();
   mScene.skydome.init();
+
   mScene.floorPlane.init(32.0f, 32.0f, 8u);
-  mScene.sphere.init(5.0f, 32u);
 
   CHECKGLERROR();
 }
+
+
+//---------------------------------------------
+//---------------------------------------------
 
 
 void Application::frame() {
@@ -165,20 +176,19 @@ void Application::frame() {
   mCamera->update();
   mScene.character.update();
 
-  glEnable(GL_DEPTH_TEST);
-  glDepthMask(GL_TRUE);
+  //-------------
+
+  aer::opengl::StatesInfo states = aer::opengl::PopStates();
 
   if (!bSSAO) {
-    render_scene();
+    render_scene(*mCamera);
     return;
   }
 
   //1) Render scene to the FBO
   mBufferingPass.FBO.bind(GL_DRAW_FRAMEBUFFER);
-  render_scene();
+  render_scene(*mCamera);
   mBufferingPass.FBO.unbind();
-
-  //--
 
   glDepthMask(GL_FALSE);
   glDisable(GL_DEPTH_TEST);
@@ -187,33 +197,33 @@ void Application::frame() {
   mPass.hbao.process(&mAOTexturePtr, mCamera->frustum());
 
   // 3) Render final texture to the screen
-  map_screen();
+  postprocess();
+
+  aer::opengl::PushStates(states);
 
   CHECKGLERROR();
 }
 
-void Application::render_scene() {
+void Application::render_scene(const aer::Camera &camera) {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   /// Skydome
-  mScene.skydome.render(*mCamera);
+  mScene.skydome.render(camera);
 
   /// Character
-  mScene.character.render(*mCamera);
+  mScene.character.render(camera);
+
 
   /// Basic scene
-  const aer::Matrix4x4 &viewProj = mCamera->view_projection_matrix();
+  const aer::Matrix4x4 &viewProj = camera.view_projection_matrix();
   aer::Matrix4x4 mvp;
 
   mProgram.scene.activate();
     mvp = viewProj;
     mProgram.scene.set_uniform("uModelViewProjMatrix", mvp);
-    
-    mProgram.scene.set_uniform("uColor", aer::Vector3(0.2f, 0.1f, 0.1f));
-    mScene.floorPlane.draw();
 
-    //mProgram.scene.set_uniform("uColor", aer::Vector3(0.4f, 0.5f, 0.5f));
-    //mScene.sphere.draw();
+    mProgram.scene.set_uniform("uColor", aer::Vector3(0.42f, 0.4f, 0.35f));
+    mScene.floorPlane.draw();
 
   mProgram.scene.deactivate();
 
@@ -221,8 +231,7 @@ void Application::render_scene() {
   CHECKGLERROR();
 }
 
-
-void Application::map_screen() {
+void Application::postprocess() {
   AER_ASSERT(mAOTexturePtr != nullptr);
 
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -252,8 +261,8 @@ void Application::help() {
   fprintf(stdout, NEW_LINE
   "----------------------------------------------------------------------" NEW_LINE
   "Aura is a technical demo demonstrating the capabilities of OpenGL 4.3." NEW_LINE
-  "It consists of a full deferred renderer with post-processing stages," NEW_LINE
-  "some great rendering effects, and an animation pipeline.\n" NEW_LINE
+  //"It consists of a full deferred renderer with post-processing stages," NEW_LINE
+  //"some great rendering effects, and an animation pipeline.\n" NEW_LINE
   "(Work In Progress)\n" NEW_LINE
   "Controls:" NEW_LINE
   "[Z-Q-S-D + mouse] or [SixAxis pad] : control the camera." NEW_LINE

@@ -31,8 +31,8 @@ class Application : public aer::Application {
   void init_scene();
 
   void frame() override;
-  void render_scene();
-  void map_screen();
+  void render_scene(const aer::Camera &camera);
+  void postprocess();
 
   void help();
 
@@ -43,7 +43,6 @@ class Application : public aer::Application {
     Character   character;
     SkyDome     skydome;
     aer::Plane  floorPlane;
-    aer::SphereRaw  sphere;
   } mScene;
 
   struct {

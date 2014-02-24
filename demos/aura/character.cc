@@ -162,9 +162,9 @@ void Character::init_animations() {
   aer::BlendTree &blendtree = skmModel_.skeleton_controller().blend_tree();
 
   aer::LeaveNode *leave1 = blendtree.add_leave("LeftArmDown");
-#if 0
-  LeaveNode *leave2 = blendtree.add_leave("RightArmDown");
-  LerpNode *node = new LerpNode(leave1, leave2);
+#if 1
+  aer::LeaveNode *leave2 = blendtree.add_leave("RightArmDown");
+  aer::LerpNode *node = new aer::LerpNode(leave1, leave2);
   node->set_factor(0.5f);
   blendtree.add_node("Lerp_test", node);
 #endif
@@ -172,15 +172,16 @@ void Character::init_animations() {
 
 void Character::init_blendshapes() {
   //-------------------------------------
+  // [for test/debug only]
   aer::Expression_t expression;
-  std::string expr_name = "facial_stuff";
+  std::string expr_name("facial_stuff");
   expression.pName = new char[64];
   sprintf(expression.pName, "%s", expr_name.c_str());
 
   expression.clip_duration = 1.0f;
   expression.bLoop         = true;
   expression.bManualBypass = true; // don't use time to compute expressions
-  expression.indices = {55, 56, 43, 3};
+  expression.indices       = {55, 56, 43, 3};
   //expression.bPingPong = true;
 
   skmModel_.morph_controller().add_expressions(&expression, 1u);

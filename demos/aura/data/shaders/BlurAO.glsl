@@ -58,8 +58,8 @@ shared vec2 smem[SMEM_SIZE];
 //  MACROS
 // =========================================
 
-#define TEX_AOZ_NEAREST(uv)   texture( uTexAOLinDepthNearest, (uv)).rg
-#define TEX_AOZ_LINEAR(uv)    texture( uTexAOLinDepthLinear,  (uv)).rg
+#define TEX_AOZ_NEAREST(uv)   texture(uTexAOLinDepthNearest, (uv)).rg
+#define TEX_AOZ_LINEAR(uv)    texture(uTexAOLinDepthLinear,  (uv)).rg
 #define SMEM(x)               smem[(x)]
 
 // =========================================
@@ -82,7 +82,7 @@ void blurX(const ivec3 threadIdx, const ivec3 blockIdx)
   const float apronStart = tileStart - KERNEL_RADIUS;
   const float   apronEnd =   tileEnd + KERNEL_RADIUS;
 
-  // Fetch (ao, z) vetween adjacent pixels with linear interpolation
+  // Fetch (ao, z) between adjacent pixels with linear interpolation
   const float x = apronStart + float(threadIdx.x) + 0.5f;
   const float y = row;
   const vec2 uv = (vec2(x,y) + 0.5f) * uInvFullResolution;
@@ -92,7 +92,7 @@ void blurX(const ivec3 threadIdx, const ivec3 blockIdx)
   /*----------*/ barrier(); /*----------*/
 
   const float writePos = tileStart + threadIdx.x;
-  const float tileEndClamped = min( tileEnd, uFullResolution.x);
+  const float tileEndClamped = min(tileEnd, uFullResolution.x);
 
   if (writePos < tileEndClamped)
   {
@@ -104,32 +104,32 @@ void blurX(const ivec3 threadIdx, const ivec3 blockIdx)
     float w_total = 1.0f;
 
 #   pragma unroll
-    for (int i=0; i<kHalfBlurRadius; ++i)
+    for (int i = 0; i < kHalfBlurRadius; ++i)
     {
       // Sample the pre-filtered data with step size = 2 pixels
       float r = 2.0f*i + (0.5f-kBlurRadius);
       uint j = 2u*i + threadIdx.x;
       vec2 samp = SMEM(j);
-      float w = CrossBilateralWeight( r, samp.y, center_d);
+      float w = CrossBilateralWeight(r, samp.y, center_d);
       ao_total += w * samp.x;
       w_total  += w;
     }
 
 #   pragma unroll
-    for (int i=0; i<kHalfBlurRadius; ++i)
+    for (int i = 0; i < kHalfBlurRadius; ++i)
     {
       // Sample the pre-filtered data with step size = 2 pixels
       float r = 2.0f*i + 1.5f;
       uint j = 2*i + threadIdx.x + KERNEL_RADIUS + 1;
       vec2 samp = SMEM(j);
-      float w = CrossBilateralWeight( r, samp.y, center_d);
+      float w = CrossBilateralWeight(r, samp.y, center_d);
       ao_total += w * samp.x;
       w_total  += w;
     }
 
     float ao = ao_total / w_total;
-    vec4 output = vec4( ao, center_d, 0.0f, 0.0f);
-    imageStore( uDstImg, ivec2(writePos, blockIdx.y), output);
+    vec4 output = vec4(ao, center_d, 0.0f, 0.0f);
+    imageStore(uDstImg, ivec2(writePos, blockIdx.y), output);
   }
 }
 
@@ -143,7 +143,7 @@ void main()
 {
   const ivec3 threadIdx = ivec3(gl_LocalInvocationID);
   const ivec3 blockIdx  = ivec3(gl_WorkGroupID);
-  blurX( threadIdx, blockIdx);
+  blurX(threadIdx, blockIdx);
 }
 
 --
@@ -162,10 +162,10 @@ void main()
 //  UNIFORMS 
 // =========================================
 
-uniform  float uBlurFalloff;
-uniform  float uBlurDepthThreshold;
-uniform  vec2 uInvFullResolution;
-uniform  vec2 uFullResolution;
+uniform float uBlurFalloff;
+uniform float uBlurDepthThreshold;
+uniform vec2 uInvFullResolution;
+uniform vec2 uFullResolution;
 
 uniform sampler2D uTexAOLinDepthNearest;
 uniform sampler2D uTexAOLinDepthLinear;
@@ -208,8 +208,8 @@ shared vec2 smem[SMEM_SIZE];
 //  MACROS
 // =========================================
 
-#define TEX_AOZ_NEAREST(uv)   texture( uTexAOLinDepthNearest, (uv), 0).rg
-#define TEX_AOZ_LINEAR(uv)    texture( uTexAOLinDepthLinear,  (uv), 0).rg
+#define TEX_AOZ_NEAREST(uv)   texture(uTexAOLinDepthNearest, (uv), 0).rg
+#define TEX_AOZ_LINEAR(uv)    texture(uTexAOLinDepthLinear,  (uv), 0).rg
 #define SMEM(x)               smem[(x)]
 
 // =========================================
@@ -249,39 +249,39 @@ void main()
   /*-------*/ barrier(); /*-------*/
 
   const float writePos = tileStart + float(threadIdx.x);
-  const float tileEndClamped = min( tileEnd, uFullResolution.x);
+  const float tileEndClamped = min(tileEnd, uFullResolution.x);
 
   if (writePos < tileEndClamped)
   {
-    vec2 uv = (vec2( x, writePos) + 0.5f) * uInvFullResolution;//
+    vec2 uv = (vec2(x, writePos) + 0.5f) * uInvFullResolution;//
     vec2 aoDepth = TEX_AOZ_NEAREST(uv);
     float ao_total = aoDepth.x;
     float center_d = aoDepth.y;
     float w_total = 1.0f;
 
 #   pragma unroll
-    for (int i=0; i<kHalfBlurRadius; ++i)
+    for (int i = 0; i < kHalfBlurRadius; ++i)
     {
       float r = 2.0f*i + (-kBlurRadius + 0.5f);
       uint j = 2u*i + threadIdx.x;
       vec2 samp = SMEM(j);
-      float w = CrossBilateralWeight( r, samp.y, center_d);
+      float w = CrossBilateralWeight(r, samp.y, center_d);
       ao_total += w * samp.x;
       w_total += w;
     }
 
 #   pragma unroll
-    for (int i=0; i<kHalfBlurRadius; ++i)
+    for (int i = 0; i < kHalfBlurRadius; ++i)
     {
       float r = 2.0f * i + 1.5f;
       uint j = 2u*i + threadIdx.x + KERNEL_RADIUS + 1u;
       vec2 samp = SMEM(j);
-      float w = CrossBilateralWeight( r, samp.y, center_d);
+      float w = CrossBilateralWeight(r, samp.y, center_d);
       ao_total += w * samp.x;
       w_total += w;
     }
 
     float ao = ao_total / w_total;
-    imageStore( uDstImg, ivec2( blockIdx.y, writePos), ao.xxxx);
+    imageStore(uDstImg, ivec2(blockIdx.y, writePos), ao.xxxx);
   }
 }
