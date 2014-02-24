@@ -8,6 +8,7 @@
 
 #include "aer/loader/texture_2d_proxy.h"
 #include "aer/loader/image_2d.h"
+#include "aer/utils/logger.h"
 
 
 namespace {
