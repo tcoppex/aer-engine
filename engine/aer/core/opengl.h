@@ -85,8 +85,10 @@ struct StatesInfo {
   bool bDepthMask;
   bool bStencilMask;
 
-  Vector4i  viewport;
+  Vector4i viewport;
   GLint cull_face_mode;
+
+  Vector4 clear_color;
 };
 
 StatesInfo PopStates();

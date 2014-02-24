@@ -178,11 +178,11 @@ StatesInfo PopStates() {
   info.bDepthMask   = GetB(GL_DEPTH_WRITEMASK);
   info.bStencilMask = GetB(GL_STENCIL_WRITEMASK);
 
-  GLint vp[4];
-  glGetIntegerv(GL_VIEWPORT, vp);
-  info.viewport = Vector4i(vp[0], vp[1], vp[2], vp[3]);
+  glGetIntegerv(GL_VIEWPORT, &info.viewport.x);
 
   info.cull_face_mode = GetI(GL_CULL_FACE_MODE);
+
+  glGetFloatv(GL_COLOR_CLEAR_VALUE, &info.clear_color.x);
 
   return info;
 }
@@ -206,6 +206,9 @@ void PushStates(const StatesInfo &info) {
   glViewport(vp.x, vp.y, vp.z, vp.w);
 
   glCullFace(info.cull_face_mode);
+
+  const Vector4 &cc = info.clear_color;
+  glClearColor(cc.x, cc.y, cc.z, cc.w);
 }
 
 }  // namespace opengl
