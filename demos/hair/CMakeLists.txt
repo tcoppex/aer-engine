@@ -1,4 +1,4 @@
-set(EXEC_NAME simple_hair)
+set(EXEC_NAME hair)
 
 file(GLOB_RECURSE Sources *.cc)
 file(GLOB_RECURSE Headers *.h)

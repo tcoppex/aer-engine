@@ -4,15 +4,19 @@
 //
 // -----------------------------------------------------------------------------
 
-#ifndef SIMPLE_HAIR_APPLICATION_H_
-#define SIMPLE_HAIR_APPLICATION_H_
+#ifndef HAIR_APPLICATION_H_
+#define HAIR_APPLICATION_H_
 
 #include "aer/aer.h"
 #include "aer/app/application.h"
 #include "aer/view/free_camera.h"
-#include "simple_hair/hair_simulation.h"
+#include "hair/hair_simulation.h"
 
+// =============================================================================
 
+/**
+ * @class Application
+ */
 class Application : public aer::Application {
  public:
   static const aer::U32 kDefaultWidth  = 1280u;
@@ -32,4 +36,6 @@ class Application : public aer::Application {
   HairSimulation mHairSim;
 };
 
-#endif  // SIMPLE_HAIR_APPLICATION_H_
+// =============================================================================
+
+#endif  // HAIR_APPLICATION_H_
