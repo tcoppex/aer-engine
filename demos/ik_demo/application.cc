@@ -70,14 +70,17 @@ void Application::setup_ikchain() {
   aer::BaseIKNode *node(nullptr);
   aer::BaseIKNode *root = mIKChain.set_root(aer::Vector3(0.0f), rot_axis);
 
-  node = mIKChain.add_node(aer::Vector3(0.0f, 1.0f, 0.0f), rot_axis, 
+  node = mIKChain.add_node(aer::Vector3(1.0f, 0.0f, 0.0f), rot_axis, 
                            aer::IK_JOINT, root);
-  node = mIKChain.add_node(aer::Vector3(-1.0f, 3.0f, 0.0f), rot_axis, 
-                           aer::IK_JOINT, node);
-  node = mIKChain.add_node(aer::Vector3(-3.0f, 4.0f, 0.0f), rot_axis, 
+  node = mIKChain.add_node(aer::Vector3(0.0f, -2.0f, 0.0f), rot_axis, 
                            aer::IK_END_EFFECTOR, node);
-  node = mIKChain.add_node(aer::Vector3(-2.0f, -2.0f, 0.0f), rot_axis, 
-                           aer::IK_END_EFFECTOR, root);
+
+
+  node = mIKChain.add_node(aer::Vector3(-1.0f, 0.0f, 0.0f), rot_axis, 
+                           aer::IK_JOINT, root);
+  node = mIKChain.add_node(aer::Vector3(0.0f, 2.0f, 0.0f), rot_axis, 
+                           aer::IK_END_EFFECTOR, node);
+
 
   mIKSolver.init(&mIKChain);
 }
@@ -90,7 +93,11 @@ void Application::frame() {
   }
 
   mCamera->update();
-  mIKSolver.update(&mTarget, 1);
+
+  aer::Vector3 targets[2] = {mTarget, mTarget};
+
+  //for (int i=0;i<20;++i)
+  mIKSolver.update(targets, 2);
 
   render_scene();
 }
@@ -102,9 +109,14 @@ void Application::render_scene() {
   aer::Matrix4x4 mvp;
 
   mProgram.activate();
-  
+
+  aer::F32 tick = aer::GlobalClock::Get().application_time()/20.0f;
+  mTarget = aer::Vector3(glm::rotate(glm::mat4(1.0f), tick, aer::Vector3(0.0f,0.0f,1.0f)) * 
+                         aer::Vector4(2.0f, 1.0f, 0.0f,1.0f));
   // Render Target
   mvp = viewproj * glm::translate(glm::mat4(1.0f), mTarget);
+
+
   mProgram.set_uniform("uColor", aer::Vector3(1.0f, 0.0f, 0.0f));
   mProgram.set_uniform("uModelViewProjMatrix", mvp);
   mSphere.draw();

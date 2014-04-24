@@ -16,13 +16,12 @@
 #include "aura/character.h"
 #include "aura/skydome.h"
 
-
+// =============================================================================
 
 class Application : public aer::Application {
  public:
   Application(int argc, char* argv[]);
   ~Application();
-
 
  private:
   void init() override;
@@ -62,5 +61,7 @@ class Application : public aer::Application {
 
   aer::Texture2D *mAOTexturePtr;
 };
+
+// =============================================================================
 
 #endif  // AURA_APPLICATION_H_

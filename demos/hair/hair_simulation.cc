@@ -371,6 +371,10 @@ void HairSimulation::init_psystem() {
 
 
 void HairSimulation::init_devicebuffers() {
+  /// Data layout :
+  ///    Data : X Y Z position + X Y Z tangent
+  /// Element : 6 vertices as PATCH
+
   /// Elements
   // for each triangles we use 2 control points per vertex (start and end position
   // of the segment)
@@ -412,30 +416,29 @@ void HairSimulation::init_devicebuffers() {
   mesh.begin_update();
   // Setup vertices info (datas are stored after the simulation update)
   aer::DeviceBuffer &vbo = mesh.vbo();
-  vbo.bind(GL_ARRAY_BUFFER);
   {
     const auto &Positions = particle_system_.particles.p1;
     const auto &Tangents  = tangents_buffer_;
     aer::UPTR offset = 0u;
     aer::U32 bind    = 0u;
+    aer::U32 attrib  = 0u;
 
     // Positions   
     glBindVertexBuffer(bind, vbo.id(), offset, sizeof(Positions[0u]));
-    glVertexAttribFormat(bind, 3, GL_FLOAT, GL_FALSE, 0);
-    glVertexAttribBinding(bind, bind);
-    glEnableVertexAttribArray(bind);
+    glVertexAttribFormat(attrib, 3, GL_FLOAT, GL_FALSE, 0);
+    glVertexAttribBinding(attrib, bind);
+    glEnableVertexAttribArray(attrib);
     offset += Positions.size() * sizeof(Positions[0u]);
-    ++bind;
+    ++bind; ++attrib;
 
     // Tangents
     glBindVertexBuffer(bind, vbo.id(), offset, sizeof(Tangents[0u]));
-    glVertexAttribFormat(bind, 3, GL_FLOAT, GL_FALSE, 0);
-    glVertexAttribBinding(bind, bind);
-    glEnableVertexAttribArray(bind);
+    glVertexAttribFormat(attrib, 3, GL_FLOAT, GL_FALSE, 0);
+    glVertexAttribBinding(attrib, bind);
+    glEnableVertexAttribArray(attrib);
     //offset += Tangents.size() * sizeof(Tangents[0]);
-    //++bind;
+    //++bind; ++attrib
   }
-  vbo.unbind();
 
   // Setup elements infos & datas
   aer::DeviceBuffer &ibo = mesh.ibo();

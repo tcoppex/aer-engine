@@ -4,21 +4,24 @@
 //
 // -----------------------------------------------------------------------------
 
-
 #include "aura/hbao_pass.h"
 
 #include "aer/view/frustum.h"
 #include "aer/rendering/mapscreen.h"
 
-
+// =============================================================================
 
 HBAOPass::HBAOPass() : mInputDepthTex(nullptr) {
   memset(&mUniformParams, 0, sizeof(mUniformParams));
 }
 
+// -----------------------------------------------------------------------------
+
 HBAOPass::~HBAOPass() {
   deinit();
 }
+
+// -----------------------------------------------------------------------------
 
 void HBAOPass::init(aer::Texture2D *hardware_depth_texture) {
   AER_ASSERT(nullptr != hardware_depth_texture);
@@ -32,6 +35,8 @@ void HBAOPass::init(aer::Texture2D *hardware_depth_texture) {
   init_textures();
   init_shaders();
 }
+
+// -----------------------------------------------------------------------------
 
 void HBAOPass::deinit() {
   if (nullptr == mInputDepthTex) {
@@ -51,6 +56,8 @@ void HBAOPass::deinit() {
 
   mInputDepthTex = nullptr;
 }
+
+// -----------------------------------------------------------------------------
 
 void HBAOPass::process(aer::Texture2D **output_ao_texture_pptr, 
                        const aer::Frustum& frustum) {
@@ -76,7 +83,7 @@ void HBAOPass::process(aer::Texture2D **output_ao_texture_pptr,
   CHECKGLERROR();
 }
 
-
+// -----------------------------------------------------------------------------
 
 void HBAOPass::init_textures() {
   const aer::U32 width  = mInputDepthTex->storage_info().width;
@@ -121,6 +128,8 @@ void HBAOPass::init_textures() {
   CHECKGLERROR();
 }
 
+// -----------------------------------------------------------------------------
+
 void HBAOPass::init_shaders() {
   aer::ShaderProxy &sp = aer::ShaderProxy::Get();
 
@@ -145,9 +154,15 @@ void HBAOPass::init_shaders() {
   CHECKGLERROR();
 }
 
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+
 /// Set the uniform parameters 'name' to program pgm
 #define SET_UNIFORM_PARAM(pgm, name) \
      pgm.set_uniform("u"#name, mUniformParams._##name)
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 
 void HBAOPass::linearize_depth() {
@@ -168,6 +183,8 @@ void HBAOPass::linearize_depth() {
 
   CHECKGLERROR();
 }
+
+// -----------------------------------------------------------------------------
 
 void HBAOPass::launch_kernel_HBAO() {
   const aer::U32 width  = mInputDepthTex->storage_info().width;
@@ -219,7 +236,7 @@ void HBAOPass::launch_kernel_HBAO() {
     gridDim.y = height;
     glDispatchCompute(gridDim.x, gridDim.y, 1);
 
-CHECKGLERROR();
+    CHECKGLERROR();
     //--------
 
     image_unit = 0;
@@ -243,6 +260,8 @@ CHECKGLERROR();
 
   CHECKGLERROR();
 }
+
+// -----------------------------------------------------------------------------
 
 void HBAOPass::launch_kernel_blurAO() {
   const aer::U32 width = mInputDepthTex->storage_info().width;
@@ -313,9 +332,13 @@ void HBAOPass::launch_kernel_blurAO() {
   CHECKGLERROR();
 }
 
+// -----------------------------------------------------------------------------
+
 void HBAOPass::compositing() {
   //
 }
+
+// -----------------------------------------------------------------------------
 
 void HBAOPass::update_parameters(const aer::Frustum &frustum) {
   const aer::U32 width  = mInputDepthTex->storage_info().width;
@@ -373,3 +396,5 @@ void HBAOPass::update_parameters(const aer::Frustum &frustum) {
 # undef GETPARAM
 # undef SETPARAM 
 }
+
+// =============================================================================

@@ -1,7 +1,6 @@
 // -----------------------------------------------------------------------------
 // CreativeCommons BY-SA 3.0 2013 <Thibault Coppex>
 //
-//
 // -----------------------------------------------------------------------------
 
 #include "aura/character.h"
@@ -12,12 +11,11 @@
 #include "aer/loader/skma_utils.h"
 #include "aer/view/camera.h"
 
+// =============================================================================
 
 void Character::init() {
   std::string filename = DATA_DIRECTORY "models/sintel/sintel";
   AER_CHECK(skmModel_.load(filename + ".skm", filename + ".mat")); //
-
-  // ----
 
   // Program shaders
   init_shaders();
@@ -29,6 +27,8 @@ void Character::init() {
   // Idem with blendshape animation datas
   init_blendshapes();
 }
+
+// -----------------------------------------------------------------------------
 
 void Character::update() {
   //-------------------------------------
@@ -62,10 +62,10 @@ void Character::update() {
     skl_controller.set_skinning_method(method);
   }
 
-  //---
-
   skmModel_.update();
 }
+
+// -----------------------------------------------------------------------------
 
 void Character::render(const aer::Camera &camera) {  
   aer::I32 texUnit = 0;
@@ -89,6 +89,10 @@ void Character::render(const aer::Camera &camera) {
   // --- Blend Shapes --------------------------------------
   aer::BlendShape &blendshape = skmModel_.morph_controller().blend_shape();
 
+  mProgram.set_uniform("uBS_count", blendshape.count());
+  mProgram.set_uniform("uBS_used", skmModel_.morph_controller()
+                                                        .total_expressions());
+
   blendshape.bind_texture_buffer(aer::BlendShape::BS_INDICES, texUnit);
   mProgram.set_uniform("uBS_indices", texUnit);
   ++texUnit;
@@ -104,10 +108,6 @@ void Character::render(const aer::Camera &camera) {
   blendshape.bind_texture_buffer(aer::BlendShape::BS_DATAS, texUnit);
   mProgram.set_uniform("uBS_data", texUnit);
   ++texUnit;
-
-  mProgram.set_uniform("uNumBlendShape", blendshape.count());
-  mProgram.set_uniform("uUsedBlendShape", 
-                       skmModel_.morph_controller().total_expressions());
 
   CHECKGLERROR();
   // -------------------------------------------------------
@@ -146,6 +146,8 @@ void Character::render(const aer::Camera &camera) {
   CHECKGLERROR();
 }
 
+// -----------------------------------------------------------------------------
+
 void Character::init_shaders() {
   aer::ShaderProxy &sp = aer::ShaderProxy::Get();
 
@@ -158,6 +160,8 @@ void Character::init_shaders() {
   CHECKGLERROR();
 }
 
+// -----------------------------------------------------------------------------
+
 void Character::init_animations() {
   aer::BlendTree &blendtree = skmModel_.skeleton_controller().blend_tree();
 
@@ -169,6 +173,8 @@ void Character::init_animations() {
   blendtree.add_node("Lerp_test", node);
 #endif
 }
+
+// -----------------------------------------------------------------------------
 
 void Character::init_blendshapes() {
   //-------------------------------------
@@ -192,3 +198,5 @@ void Character::init_blendshapes() {
   aer::LeaveNode *leave1 = blendtree.add_leave(expr_name);
   blendtree.add_node("face_coeff", new aer::CoeffNode(leave1));
 }
+
+// =============================================================================

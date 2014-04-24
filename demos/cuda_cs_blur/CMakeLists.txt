@@ -1,13 +1,16 @@
 set(EXEC_NAME cuda_cs_blur)
 
 
-# Current NVCC version does not support cpp-11
-# TODO : link separately CUDA and cpp files
-message(WARNING "${EXEC_NAME} will be compiled without CUDA support.")
 
 
 set(DATA_DIRECTORY ${CMAKE_SOURCE_DIR}/${EXEC_NAME}/data/)
 add_definitions(-DDATA_DIRECTORY="${DATA_DIRECTORY}")
+
+#---------------------------------------------------------------------
+
+# Current NVCC version does not support cpp-11
+# TODO : link separately CUDA and cpp files
+message(WARNING "${EXEC_NAME} will be compiled without CUDA support.")
 
 file(GLOB_RECURSE Sources *.cc)
 file(GLOB_RECURSE Headers *.h)

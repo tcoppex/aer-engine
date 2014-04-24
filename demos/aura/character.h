@@ -19,19 +19,21 @@
 
 #include "aura/skm_model.h" // [wip]
 
+// =============================================================================
 
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + 
-///
-/// 
-///
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + 
+/**
+ * @class Character
+ * @brief Handle an animated character 
+ *
+ * @warning first draft
+*/
 class Character {
- public:
+public:
   void init();
   void update();
   void render(const aer::Camera &camera);
 
- private:
+private:
   void init_shaders();
   void init_animations();
   void init_blendshapes();
@@ -39,5 +41,7 @@ class Character {
   aer::SKMModel skmModel_; //
   aer::Program  mProgram;
 };
+
+// =============================================================================
 
 #endif  // AURA_CHARACTER_H_

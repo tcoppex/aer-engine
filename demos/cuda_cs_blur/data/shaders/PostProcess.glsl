@@ -35,7 +35,7 @@
 # define MAX_RADIUS     BLOCK_DIM
 #endif
 
-#define TILE_MAXDIM     (BLOCK_DIM+2*MAX_RADIUS)
+#define TILE_MAXDIM     (BLOCK_DIM + 2*MAX_RADIUS)
 #define SMEM_SIZE       (TILE_MAXDIM*TILE_MAXDIM)
 
 layout(local_size_x=BLOCK_DIM, local_size_y=BLOCK_DIM) in;
@@ -62,7 +62,7 @@ uniform int uRadius;
 const vec2 kTexelSize = 1.0f / textureSize(uSrcTex, 0).xy;
 
 // Note: not on constant register due to uRadius use
-const int  kTileDim   = (BLOCK_DIM+2*uRadius);
+const int  kTileDim   = BLOCK_DIM + 2*uRadius;
 
 
 // -- SHARED MEMORY
@@ -164,6 +164,5 @@ void main()
   }
 
   sum /= samples;
-  imageStore( uDstImg, threadPos.xy, vec4(sum, 1.0f));
+  imageStore(uDstImg, threadPos.xy, vec4(sum, 1.0f));
 }
-

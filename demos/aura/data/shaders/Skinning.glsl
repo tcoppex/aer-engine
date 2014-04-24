@@ -18,22 +18,24 @@ uniform mat4 uModelViewProjMatrix;
 uniform mat3 uNormalMatrix = mat3(1.0f); //
 
 // Skinning
-uniform samplerBuffer uSkinningDatas;
+layout(binding=0) uniform samplerBuffer uSkinningDatas;
+//uniform isamplerBuffer uSkinningIndices;
+//uniform  samplerBuffer uSkinningWeights;
 
 // Blend Shape
-uniform  samplerBuffer uBS_weights;
-uniform isamplerBuffer uBS_indices;
-uniform  samplerBuffer uBS_data;
-uniform isamplerBuffer uBS_LUT;
-uniform           uint uNumBlendShape;
-uniform           uint uUsedBlendShape;
+                  uniform           uint uBS_count;   ///< number of blendshape in data
+                  uniform           uint uBS_used;    ///< number of used blendshape
+layout(binding=1) uniform  samplerBuffer uBS_weights; ///< user specified weights
+layout(binding=2) uniform isamplerBuffer uBS_indices; ///< user specified indices
+layout(binding=3) uniform  samplerBuffer uBS_data;    ///< mesh's blendshapes
+layout(binding=4) uniform isamplerBuffer uBS_LUT;     ///< VertexID to blendshape ID LUT
 
 // Input attributes
 layout(location = 0) in  vec3 inPosition;
 layout(location = 1) in  vec3 inNormal;
 layout(location = 2) in  vec2 inTexCoord;
-layout(location = 3) in ivec4 inJointIndices;
-layout(location = 4) in  vec3 inJointWeight;
+layout(location = 3) in ivec4 inJointIndices; //
+layout(location = 4) in  vec3 inJointWeight;  //
 
 // Output attributes
 out VDataBlock {
@@ -166,11 +168,11 @@ void skinning_LBS(in vec4 weights, inout vec3 v, inout vec3 n) {
 ///--------------------------------------------------------------------
 
 void calculate_blendshape(inout vec3 v, inout vec3 n) {
-  for (int i = 0; i < int(uUsedBlendShape); ++i) {
-    float   weight = texelFetch(uBS_weights, i); //uBS_weights[i]
-    int      index = texelFetch(uBS_indices, i); //uBS_indices[i]
+  for (int i = 0; i < int(uBS_used); ++i) {
+    float   weight = texelFetch(uBS_weights, i);
+    int      index = texelFetch(uBS_indices, i);
 
-    int     lut_id = gl_VertexID * int(uNumBlendShape) + index;
+    int     lut_id = gl_VertexID * int(uBS_count) + index;
     int  target_id = texelFetch(uBS_LUT, lut_id);
 
     // Position

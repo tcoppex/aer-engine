@@ -4,18 +4,20 @@
 //
 // -----------------------------------------------------------------------------
 
-
 #include "aura/skydome.h"
 
 #include "aer/device/framebuffer.h"
 #include "aer/view/camera.h"
 #include "aer/rendering/mapscreen.h"
 
+// =============================================================================
 
 SkyDome::~SkyDome() {
   mProgram.release();
   mTexture.release();
 }
+
+// -----------------------------------------------------------------------------
 
 bool SkyDome::init() {
   // Program
@@ -37,13 +39,15 @@ bool SkyDome::init() {
   aer::F32 dome_radius = 150.0f;
   mMesh.init(1.0, kDefaultMeshResolution);
 
-  // Rendering properties
+  // Rendering parameters
   mAttribs.model_matrix = glm::scale(glm::mat4(1.0f), glm::vec3(dome_radius));
   mAttribs.color        = aer::Vector3(0.75f,0.45f,0.8f);
   mAttribs.speed        = 0.0035f;
 
   return true;
 }
+
+// -----------------------------------------------------------------------------
 
 void SkyDome::render(const aer::Camera &camera) {
   aer::opengl::StatesInfo glstates = aer::opengl::PopStates();
@@ -80,6 +84,8 @@ void SkyDome::render(const aer::Camera &camera) {
   CHECKGLERROR();
 }
 
+// -----------------------------------------------------------------------------
+
 bool SkyDome::init_texture() {
   mTexture.generate();
   mTexture.bind();
@@ -112,7 +118,6 @@ bool SkyDome::init_texture() {
     return false;
   }
 
-  //---------------------------------------------------------------------------
   /// Generate !
   aer::opengl::StatesInfo glstates = aer::opengl::PopStates();
 
@@ -137,9 +142,10 @@ bool SkyDome::init_texture() {
   rt.release();
 
   aer::opengl::PushStates(glstates);
-  //---------------------------------------------------------------------------
 
   CHECKGLERROR();
 
   return true;
 }
+
+// =============================================================================

@@ -9,6 +9,7 @@
 #include "aer/aer.h"
 #include "aer/rendering/mapscreen.h"
 
+// =============================================================================
 
 Application::Application(int argc, char* argv[]) :
   aer::Application(argc, argv),
@@ -16,10 +17,13 @@ Application::Application(int argc, char* argv[]) :
   mAOTexturePtr(nullptr)
 {}
 
+// -----------------------------------------------------------------------------
+
 Application::~Application() {
   AER_SAFE_DELETE(mCamera);
 }
 
+// -----------------------------------------------------------------------------
 
 void Application::init() {
   /// Window
@@ -72,6 +76,8 @@ void Application::init() {
   help();
 }
 
+// -----------------------------------------------------------------------------
+
 void Application::init_textures() { 
   const aer::U32 width  = window().display().width;
   const aer::U32 height = window().display().height;
@@ -97,6 +103,8 @@ void Application::init_textures() {
   CHECKGLERROR();
 }
 
+// -----------------------------------------------------------------------------
+
 void Application::init_shaders() {
   aer::ShaderProxy &sp = aer::ShaderProxy::Get();
   sp.set_shader_path(DATA_DIRECTORY"/shaders/");
@@ -116,6 +124,7 @@ void Application::init_shaders() {
   AER_CHECK(mProgram.mapscreen.link());
 }
 
+// -----------------------------------------------------------------------------
 
 void Application::init_scene() {
   mScene.character.init();
@@ -126,10 +135,7 @@ void Application::init_scene() {
   CHECKGLERROR();
 }
 
-
-//---------------------------------------------
-//---------------------------------------------
-
+// -----------------------------------------------------------------------------
 
 void Application::frame() {
   const aer::EventsHandler &ev  = aer::EventsHandler::Get();
@@ -204,6 +210,8 @@ void Application::frame() {
   CHECKGLERROR();
 }
 
+// -----------------------------------------------------------------------------
+
 void Application::render_scene(const aer::Camera &camera) {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -213,7 +221,6 @@ void Application::render_scene(const aer::Camera &camera) {
   /// Character
   mScene.character.render(camera);
 
-
   /// Basic scene
   const aer::Matrix4x4 &viewProj = camera.view_projection_matrix();
   aer::Matrix4x4 mvp;
@@ -221,15 +228,14 @@ void Application::render_scene(const aer::Camera &camera) {
   mProgram.scene.activate();
     mvp = viewProj;
     mProgram.scene.set_uniform("uModelViewProjMatrix", mvp);
-
     mProgram.scene.set_uniform("uColor", aer::Vector3(0.42f, 0.4f, 0.35f));
     mScene.floorPlane.draw();
-
   mProgram.scene.deactivate();
-
 
   CHECKGLERROR();
 }
+
+// -----------------------------------------------------------------------------
 
 void Application::postprocess() {
   AER_ASSERT(mAOTexturePtr != nullptr);
@@ -255,6 +261,8 @@ void Application::postprocess() {
   CHECKGLERROR();
 }
 
+// -----------------------------------------------------------------------------
+
 void Application::help() {
 #define NEW_LINE  "\n" \
 
@@ -278,3 +286,5 @@ void Application::help() {
 
 #undef NEW_LINE
 }
+
+// =============================================================================

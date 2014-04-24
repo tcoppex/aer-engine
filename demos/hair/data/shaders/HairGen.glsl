@@ -1,25 +1,29 @@
-/*
- *          HairGen.glsl
- *
- *
- *
- */
-
+//
+//          HairGen.glsl
+//
 //------------------------------------------------------------------------------
 
 
 -- VS
 
-
+//-----------------
+/// INPUTS
+//-----------------
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inTangent;
 
+//-----------------
+/// OUTPUTS
+//-----------------
 out VDataBlock {
   vec3 position;
   vec3 tangent;
-  int instanceID;
+  invariant int instanceID;
 } OUT;
 
+//-----------------
+/// FUNCTIONS
+//-----------------
 void main() {
   OUT.position = inPosition;
   OUT.tangent  = inTangent;
@@ -34,19 +38,24 @@ void main() {
 
 -- TCS
 
+//-----------------
+/// UNIFORMS
+//-----------------
 uniform int uNumLines           = 1;
 uniform int uNumLinesSubSegment = 1;
 
-
-/// Inputs
+//-----------------
+/// INPUTS
+//-----------------
 in VDataBlock {
   vec3 position;
   vec3 tangent;
-
   int instanceID;
 } IN[];
 
-/// Outputs
+//-----------------
+/// OUTPUTS
+//-----------------
 layout(vertices = 6) out;
 
 out VDataBlock {
@@ -54,8 +63,11 @@ out VDataBlock {
   vec3 tangent;
 } OUT[];
 
-patch out int tc_instanceID;
+invariant patch out int tc_instanceID;
 
+//-----------------
+/// FUNCTIONS
+//-----------------
 float calculate_tri_area(in vec3 A, in vec3 B, in vec3 C);
 
 void main() {
@@ -69,7 +81,7 @@ void main() {
     gl_TessLevelOuter[0] = uNumLines;
     gl_TessLevelOuter[1] = uNumLinesSubSegment;
 
-    tc_instanceID  = IN[0].instanceID;
+    tc_instanceID = IN[0].instanceID;
   }
 }
 
@@ -103,13 +115,16 @@ float calculate_tri_area(in vec3 A, in vec3 B, in vec3 C) {
 
 -- TES
 
+//-----------------
+/// UNIFORMS
+//-----------------
+uniform       mat4 uMVP;
+uniform  sampler1D uTexRandom;
+uniform        int uNumInstances = 1;
 
-/// ### uniforms ###
-uniform mat4 uMVP;
-uniform sampler1D uTexRandom;
-uniform int uNumInstances = 1;
-
-/// ### inputs ###
+//-----------------
+/// INPUTS
+//-----------------
 layout(isolines) in;
 //layout(point_mode) in;
 
@@ -120,10 +135,14 @@ in VDataBlock {
 
 patch in int tc_instanceID;
 
-/// ### outputs ###
-out float te_colorFactor;
+//-----------------
+/// OUTPUTS
+//-----------------
+invariant out float te_colorFactor;
 
-/// ### functions ###
+//-----------------
+/// FUNCTIONS
+//-----------------
 vec4 hermit_mix(in vec3 p0, in vec3 p1, in vec3 t0, in vec3 t1, in float u);
 
 void main() {
@@ -145,7 +164,7 @@ void main() {
                        uv.x);
 
   /// Calculate random texture coordinates
-  const float texelSize = 1.0f / (textureSize(uTexRandom, 0).x-1.0f);
+  const float texelSize = 1.0f / (textureSize(uTexRandom, 0).x - 1.0f);
   float texcoord = uv.y + tc_instanceID * texelSize;
 
   /// Retrieve random coordinates
@@ -187,11 +206,19 @@ vec4 hermit_mix(in vec3 p0, in vec3 p1, in vec3 t0, in vec3 t1, in float u) {
 
 -- FS
 
-
+//-----------------
+/// INPUTS
+//-----------------
 in float te_colorFactor;
 
+//-----------------
+/// OUTPUTS
+//-----------------
 layout(location = 0) out vec4 fragColor;
 
+//-----------------
+/// FUNCTIONS
+//-----------------
 void main() {
   vec3 color = te_colorFactor * vec3(0.3f, 0.2f, 0.0f);
   fragColor = vec4(color, 1.0f);

@@ -13,16 +13,16 @@
 #include "aer/device/program.h"
 #include "aer/device/framebuffer.h"
 
+// =============================================================================
 
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ +
-///
-/// Horizontal Based Ambient Occlusion algorithm CPU pass.
-///
-/// Original algorithm from Louis Bavoil, Nvidia.
-///
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ +
+/**
+ * @class HBAOPass
+ * @brief Horizontal Based Ambient Occlusion algorithm CPU pass
+ *
+ * @note Original algorithm from Louis Bavoil, Nvidia
+*/
 class HBAOPass {
- public:
+public:
   HBAOPass();
   ~HBAOPass();
 
@@ -33,7 +33,7 @@ class HBAOPass {
                const aer::Frustum& frustum);
 
 
- private:
+private:
   static const aer::U32 kHBAOTileWidth = 320u;
   static const aer::U32 kBlurRadius    = 8u;
   static const aer::U32 kBlurBlockDim  = kHBAOTileWidth + 2*kBlurRadius;
@@ -110,5 +110,7 @@ class HBAOPass {
 
   //GPUTimer_t mGPUTimer;
 };
+
+// =============================================================================
 
 #endif  // AURA_HBAO_PASS_H_
