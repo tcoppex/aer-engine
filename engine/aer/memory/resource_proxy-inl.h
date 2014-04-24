@@ -7,13 +7,16 @@
 #ifndef AER_MEMORY_RESOURCE_PROXY_INL_H_
 #define AER_MEMORY_RESOURCE_PROXY_INL_H_
 
-
+// =============================================================================
 namespace aer {
+// =============================================================================
 
 template<typename T, typename I>
 ResourceProxy<T,I>::~ResourceProxy() {
   clean_all();
 }
+
+// -----------------------------------------------------------------------------
 
 template<typename T, typename I>
 T* ResourceProxy<T,I>::get(const I &id) {
@@ -32,6 +35,8 @@ T* ResourceProxy<T,I>::get(const I &id) {
   return obj;
 }
 
+// -----------------------------------------------------------------------------
+
 template<typename T, typename I>
 bool ResourceProxy<T,I>::release(T *obj) {
   if (reference_counts_[obj] == 0u) {
@@ -43,6 +48,8 @@ bool ResourceProxy<T,I>::release(T *obj) {
   }
   return true;
 }
+
+// -----------------------------------------------------------------------------
 
 template<typename T, typename I>
 bool ResourceProxy<T,I>::release(const I &id) {
@@ -59,6 +66,8 @@ bool ResourceProxy<T,I>::release(const I &id) {
   return false;
 }
 
+// -----------------------------------------------------------------------------
+
 template<typename T, typename I>
 void ResourceProxy<T,I>::clean_all() {
   for (auto &file : files_) {
@@ -67,17 +76,15 @@ void ResourceProxy<T,I>::clean_all() {
   }
 }
 
+// -----------------------------------------------------------------------------
+
 template<typename T, typename I>
 void ResourceProxy<T,I>::add_reference(T* obj) {
   ++reference_counts_[obj]; 
 }
 
-// to override
-template<typename T, typename I>
-T* ResourceProxy<T,I>::load(const I &id) {
-  return new T();
-}
-
+// =============================================================================
 }  // namespace aer
+// =============================================================================
 
 #endif  // AER_MEMORY_RESOURCE_PROXY_INL_H_

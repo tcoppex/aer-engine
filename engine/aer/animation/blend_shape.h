@@ -1,12 +1,10 @@
 // -----------------------------------------------------------------------------
-// CreativeCommons BY-SA 3.0 2013 <Thibault Coppex>
-//
+// CreativeCommons BY-SA 3.0 2014 <Thibault Coppex>
 //
 // -----------------------------------------------------------------------------
 
 #ifndef AER_ANIMATION_BLEND_SHAPE_H_
 #define AER_ANIMATION_BLEND_SHAPE_H_
-
 
 #include <map>
 #include <string>
@@ -17,17 +15,18 @@
 #include "aer/device/texture_buffer.h"
 #include "aer/utils/global_clock.h"
 
+// =============================================================================
 namespace aer {
+// =============================================================================
 
 class SKMFile;
 
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + 
-///
-///  Contains the blend shapes data used by a base mesh
-///
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + 
+/**
+ * @class BlendShape
+ * @brief Contains the blend shapes data used by a base mesh
+*/
 class BlendShape {
- public:
+public:
   /// Type of buffers sent to the device.
   ///
   /// Important note :
@@ -49,12 +48,12 @@ class BlendShape {
 
   void init(const SKMFile &skmFile);
 
-  /// Return a blend shape ID from its name
+  /// @return a blend shape ID from its name
   const U32 id_from_name(const std::string &name) {
     return mBSIndexMap[name];
   }
 
-  /// Return the number of blend shape stored
+  /// @return the number of blend shape stored
   const U32 count() const {
     return mCount;
   }
@@ -83,15 +82,14 @@ class BlendShape {
                        U32 size) {
     mExpressions.insert(mExpressions.begin(), expressions, expressions + size);
     generate_sequence(sequence);
-  }
-  
+  }  
   // ----------------------------------------------------------
 
   /// Display the list of blend shapes with their ids
   void DEBUG_display_names();
 
 
- private:
+private:
   void init_expressions();
 
   typedef std::map<std::string, U32>  BSIndexMap_t;
@@ -107,6 +105,8 @@ class BlendShape {
   TBO_t mTBO[kNumBufferType];
 };
 
+// =============================================================================
 }  // namespace aer
+// =============================================================================
 
 #endif  // AER_ANIMATION_BLEND_SHAPE_H_

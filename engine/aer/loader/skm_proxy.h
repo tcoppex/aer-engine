@@ -14,15 +14,20 @@
 #include "aer/memory/resource_proxy.h"
 #include "aer/rendering/mesh.h"
 
+// =============================================================================
 namespace aer {
+// =============================================================================
 
+// forward declarations
 class Skeleton;
 class SKMFile;
 
+// -----------------------------------------------------------------------------
 
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~
-/// Datastructs used to compute attribs size
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~
+/**
+ * @struct SkinnedVertex
+ * @brief Datastructs used to compute attribs size
+*/
 struct SkinnedVertex {
   F32 position[3];
   F32 normal[3];
@@ -31,6 +36,11 @@ struct SkinnedVertex {
   F32 jointWeight[3];
 };
 
+// -----------------------------------------------------------------------------
+
+/**
+ * @struct VertexOffset
+*/
 struct VertexOffset {
   UPTR position;
   UPTR normal;
@@ -52,10 +62,12 @@ struct VertexOffset {
   }
 };
 
+// -----------------------------------------------------------------------------
 
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~
-/// Binding info bw mesh & skeleton
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~
+/**
+ * @struct SKMInfo_t
+ * @brief Holds binding informations between mesh & skeleton
+*/
 struct SKMInfo_t {
   Mesh                      mesh;
   BlendShape                *blendshape = nullptr;
@@ -80,22 +92,26 @@ struct SKMInfo_t {
   }
 };
 
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ +
-///
-/// Manages loaded SKM object datas
-///
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ +
+// -----------------------------------------------------------------------------
+
+/**
+ * @class SKMProxy
+ * @brief Manages loaded SKM Object datas
+ * @see ResourceProxy, SKMInfo_t
+*/
 class SKMProxy : public ResourceProxy<SKMInfo_t> {
- public:
+public:
   virtual SKMInfo_t* load(const std::string& id) override;
 
- private:
+private:
   /// All the mesh initializer could be exported to the Mesh object !
   void init_mesh(const SKMFile& skmFile, Mesh& mesh);
   void init_mesh_vertices(const SKMFile &skmFile, Mesh &mesh);
   void init_mesh_indices(const SKMFile &skmFile, Mesh &mesh);
 };
 
+// =============================================================================
 }  // namespace aer
+// =============================================================================
 
 #endif  // AER_LOADER_SKM_PROXY_H_

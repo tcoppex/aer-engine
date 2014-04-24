@@ -1,16 +1,17 @@
 // -----------------------------------------------------------------------------
-// CreativeCommons BY-SA 3.0 2013 <Thibault Coppex>
-//
+// CreativeCommons BY-SA 3.0 2014 <Thibault Coppex>
 //
 // -----------------------------------------------------------------------------
 
 #include "aer/animation/morph_controller.h"
 #include "aer/utils/global_clock.h"
 
-
+// =============================================================================
 namespace {
+// =============================================================================
 
 /// Calculate the sequence_clip phase at global_time
+/// @return false if the clip is finished
 bool ComputeExpression(const aer::F32 global_time,
                        aer::SequenceClip_t& sequence_clip,
                        aer::F32& dst_weight)
@@ -26,10 +27,14 @@ bool ComputeExpression(const aer::F32 global_time,
   return true;
 }
 
+// =============================================================================
 }  // namespace
+// =============================================================================
 
 
+// =============================================================================
 namespace aer {
+// =============================================================================
 
 bool MorphController::init(BlendShape *blendshape) {
   AER_ASSERT(nullptr == mBlendShape_ptr);
@@ -47,6 +52,8 @@ bool MorphController::init(BlendShape *blendshape) {
   return true;
 }
 
+// -----------------------------------------------------------------------------
+
 void MorphController::update() {
   // TODO : test if the tree is set or not
   mBlendTree.activate_leaves(true, mSequence); //
@@ -61,6 +68,7 @@ void MorphController::update() {
   update_buffers();
 }
 
+// -----------------------------------------------------------------------------
 
 void MorphController::compute_expressions() {
   F32 global_time = GlobalClock::Get().application_time(SECOND);
@@ -85,6 +93,8 @@ void MorphController::compute_expressions() {
     }
   }
 }
+
+// -----------------------------------------------------------------------------
 
 void MorphController::update_buffers() {
   U32 cursor_index;
@@ -127,4 +137,6 @@ void MorphController::update_buffers() {
   DeviceBuffer::Unbind(GL_TEXTURE_BUFFER);
 }
 
+// =============================================================================
 }  // namespace aer
+// =============================================================================

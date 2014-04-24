@@ -251,8 +251,10 @@ void EventsHandler::handle_joystick_button(bool bPressed) {
   U32 joystick_id = event_.joystickButton.joystickId;
   U32 button      = event_.joystickButton.button;
   
-  //printf("joystick %d pressed button %d\n", joystick_id, button);
-  AER_CHECK(joystick_id == 0u);
+  AER_DEBUG_CODE(
+  fprintf(stderr, "joystick %d pressed button %d\n", joystick_id, button);
+  )
+  //AER_CHECK(joystick_id == 0u);
 
   if (bPressed) {
     if (!joystick_button_down(button)) {

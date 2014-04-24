@@ -41,8 +41,7 @@ void VerletIntegrator::accumulateForces(const F32 dt,
   forces_accum_.assign(forces_accum_.size(), Vector3(0.0f));
 
   /// Accumulate forces
-  for (U32 i = 0u; i < particles.Size(); ++i)
-  {
+  for (U32 i = 0u; i < particles.Size(); ++i) {
     auto &forceAccum = forces_accum_[i];
    
     for (U32 j = 0u; j < psystem.NumForces(); ++j) {
@@ -59,8 +58,7 @@ void VerletIntegrator::accumulateSprings(const F32 dt,
                                          const ParticleSystem_t &psystem) {
   const ParticleBuffer_t &particles = psystem.particles;
 
-  for (U32 i = 0u; i < psystem.springs.size(); ++i)
-  {
+  for (U32 i = 0u; i < psystem.springs.size(); ++i) {
     const auto &spring = psystem.springs[i];
     
     const auto &ptA_last = particles.p0[spring.pointA];
@@ -103,8 +101,7 @@ void VerletIntegrator::integrate(const F32 dt,
                                  ParticleBuffer_t &particles) {
   F32 dt2 = dt * dt;
 
-  for (U32 i = 0u; i < particles.Size(); ++i)
-  {
+  for (U32 i = 0u; i < particles.Size(); ++i) {
     Vector3 &P0 = particles.p0[i];
     Vector3 &P1 = particles.p1[i];
 
@@ -119,8 +116,7 @@ void VerletIntegrator::satisfyConstraints(const F32 dt,
         auto& particles = psystem.particles;
   const auto& bspheres  = psystem.bounding_spheres;
   
-  for (U32 i = 0u; i < particles.Size(); ++i)
-  {
+  for (U32 i = 0u; i < particles.Size(); ++i) {
     const auto &old_position = particles.p0[i];
           auto &position     = particles.p1[i];
 
@@ -138,10 +134,12 @@ void VerletIntegrator::satisfyConstraints(const F32 dt,
       }
     }
 
+#if AER_DEBUG
     // debug simulation bounding box
     position = glm::clamp(position, Vector3(-200.0f), Vector3(+200.0f));
+#endif
 
-    // Fixed particles (last to stay where it was defined first)
+    // Fixed particles
     if (particles.tied[i]) {
       position = old_position;
     }

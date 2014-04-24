@@ -1,13 +1,14 @@
 // -----------------------------------------------------------------------------
-// CreativeCommons BY-SA 3.0 2013 <Thibault Coppex>
+// CreativeCommons BY-SA 3.0 2014 <Thibault Coppex>
 //
 // -----------------------------------------------------------------------------
 
 #include "aer/device/shader.h"
+#include "aer/loader/shader_proxy.h"
 
-
+// =============================================================================
 namespace aer {
-
+// =============================================================================
 
 GLbitfield ShaderView::TypeToBitfield(GLenum type) {
 #define SHADER_CASE(t)   case t: return t##_BIT
@@ -25,30 +26,32 @@ GLbitfield ShaderView::TypeToBitfield(GLenum type) {
 #undef SHADER_CASE
 }
 
+// =============================================================================
 
-void ShaderView::release() {
-  AER_ASSERT(is_created());
+void Shader::release() {
+  if (!is_created()) {
+    return;
+  }
 
-  //AER_WARNING("Must call the ShaderManager.");
-  U32 refcount = 0u;//ShaderManager::Get().release(this);
+  U32 refcount = ShaderProxy::Get().release(refname_);
+
   if (refcount == 0u) {
     glDeleteShader(id_);
     id_ = 0u;
   }
 }
 
-
-/// - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
+// -----------------------------------------------------------------------------
 
 bool Shader::compile() {
   AER_ASSERT(is_created());
-  
+
   GLint status;
   glCompileShader(id_);
   glGetShaderiv(id_, GL_COMPILE_STATUS, &status);
   return GL_TRUE == status;
 }
 
-
+// =============================================================================
 }  // namespace aer
+// =============================================================================

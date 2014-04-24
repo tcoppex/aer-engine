@@ -83,6 +83,8 @@ class GlobalClock : public Singleton<GlobalClock>
   // specify the default time unit to return
   void set_default_unit(TimeUnit unit);
 
+  void stabilize_delta_time(const aer::F64 dt);
+
 
  private:
   bool is_same_unit(TimeUnit src, TimeUnit dst) const;

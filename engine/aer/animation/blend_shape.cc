@@ -1,21 +1,22 @@
 // -----------------------------------------------------------------------------
-// CreativeCommons BY-SA 3.0 2013 <Thibault Coppex>
-//
+// CreativeCommons BY-SA 3.0 2014 <Thibault Coppex>
 //
 // -----------------------------------------------------------------------------
-
 
 #include "aer/animation/blend_shape.h"
 
 #include <vector>
 #include "aer/loader/skma.h"
 
-
+// =============================================================================
 namespace aer {
+// =============================================================================
 
 BlendShape::BlendShape()
   : mCount(0u)
 {}
+
+//------------------------------------------------------------------------------
 
 BlendShape::~BlendShape() {
   for (auto &tbo : mTBO) {
@@ -27,6 +28,8 @@ BlendShape::~BlendShape() {
   }
   mExpressions.clear();
 }
+
+//------------------------------------------------------------------------------
 
 void BlendShape::init(const SKMFile &skmFile) {
   const SKMFile::TSKeyInfo *pSKeyInfos = skmFile.skey_infos();
@@ -153,6 +156,8 @@ void BlendShape::init(const SKMFile &skmFile) {
   CHECKGLERROR();
 }
 
+//------------------------------------------------------------------------------
+
 void BlendShape::DEBUG_display_names() {
   BSIndexMap_t::iterator it = mBSIndexMap.begin();
 
@@ -163,6 +168,7 @@ void BlendShape::DEBUG_display_names() {
   fprintf(stderr, "------------------------------------\n\n");
 }
 
+//------------------------------------------------------------------------------
 
 void BlendShape::init_expressions() {
   /// Expressions are set of individual blendshape, making a "blendshape clip".
@@ -184,4 +190,6 @@ void BlendShape::init_expressions() {
   }
 }
 
+// =============================================================================
 }  // namespace aer
+// =============================================================================

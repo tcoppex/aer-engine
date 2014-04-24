@@ -15,22 +15,24 @@
 #include "aer/memory/resource_proxy.h"
 #include "aer/device/shader.h"
 
-
+// =============================================================================
 namespace aer {
+// =============================================================================
 
-
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ +
-///
-/// Manages shader resources.
-/// It detects automatically the shader type based on its
-/// extension, but users can specify it manually if needed.
-///
-/// The class is singletonize manually.
-///
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ +
+/**
+ * @class ShaderProxy
+ * @brief Manages shader resources
+ *
+ * It detects automatically the shader type based on its
+ * extension, but users can specify it manually if needed.
+ *
+ * The class is singletonize manually.
+*/
 class ShaderProxy : public ResourceProxy<Shader> {
 
-//------------ Singleton
+  // ---------------------------------------------------------------------------
+  /// @name Singleton attributes
+  // ---------------------------------------------------------------------------
 
  public:
   static void Initialize() {
@@ -64,9 +66,10 @@ class ShaderProxy : public ResourceProxy<Shader> {
   }
 
 
-//------------ ResourceProxy
-
- public:
+  // ---------------------------------------------------------------------------
+  /// @name ResourceProxy attributes
+  // ---------------------------------------------------------------------------
+public:
   void set_shader_path(const char *shader_path) {
     snprintf(sShaderPath, AER_ARRAYSIZE(sShaderPath), "%s", shader_path);
     glswSetPath(sShaderPath, ".glsl");
@@ -80,7 +83,6 @@ class ShaderProxy : public ResourceProxy<Shader> {
     glReleaseShaderCompiler();
   }
 
-
   /// Override get to detect shader type automatically
   Shader* get(const std::string& id);
 
@@ -88,7 +90,8 @@ class ShaderProxy : public ResourceProxy<Shader> {
   Shader* get(const std::string& id, GLenum type);
 
 
- private:
+private:
+  /// Initialize the LUT used to detect shader type from its tag extension
   void set_shader_types() {
     extension_to_type_["VS"]  = GL_VERTEX_SHADER;
     extension_to_type_["TCS"] = GL_TESS_CONTROL_SHADER;
@@ -105,8 +108,7 @@ class ShaderProxy : public ResourceProxy<Shader> {
     extension_to_type_["Compute"]         = GL_COMPUTE_SHADER;
   }
 
-  /// Load override
-  virtual Shader* load(const std::string& id) override;
+  Shader* load(const std::string& id) override;
 
 
   typedef std::unordered_map<std::string, GLenum> ExtensionToTypeMap_t;
@@ -120,7 +122,8 @@ class ShaderProxy : public ResourceProxy<Shader> {
   GLenum type_;                               // saved argument from get()
 };
 
-
+// =============================================================================
 }  // namespace aer
+// =============================================================================
 
 #endif  // AER_LOADER_SHADER_PROXY_H_

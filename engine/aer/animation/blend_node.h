@@ -1,6 +1,5 @@
 // -----------------------------------------------------------------------------
-// CreativeCommons BY-SA 3.0 2013 <Thibault Coppex>
-//
+// CreativeCommons BY-SA 3.0 2014 <Thibault Coppex>
 //
 // -----------------------------------------------------------------------------
 
@@ -9,30 +8,32 @@
 
 #include "aer/common.h"
 
-
+// =============================================================================
 namespace aer {
+// =============================================================================
 
 /// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + 
-///
-/// Datastructures used to represent blend tree nodes
-///
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + 
+// Datastructures used to represent blend tree nodes
+// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + 
 
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~
-/// Base node used in the Blend Tree
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~
+/**
+ * @class BlendNode
+ * @brief Base node used in the Blend Tree
+*/
 class BlendNode {
- public:
+public:
   /// Compute final weight for each clips
   virtual void compute_weight(const F32 weight) = 0;
 };
 
+// =============================================================================
 
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~
-/// LERP two nodes together
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~
+/**
+ * @class LerpNode
+ * @brief Interpolates two nodes together
+*/
 class LerpNode : public BlendNode {
- public:
+public:
   LerpNode(BlendNode *input1, BlendNode *input2) :
     mFactor(0.0f),
     mpInput1(input1),
@@ -58,9 +59,12 @@ class LerpNode : public BlendNode {
   BlendNode *mpInput2;
 };
 
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~
-/// Multiply a subtree by a coefficient factor
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~
+// =============================================================================
+
+/**
+ * @class CoeffNode
+ * @brief Multiply a subtree by a coefficient factor
+*/
 class CoeffNode : public BlendNode {
   public:
     CoeffNode(BlendNode *input1) :
@@ -85,9 +89,12 @@ class CoeffNode : public BlendNode {
     BlendNode *mpInput1;
 };
 
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~
-/// Leave Node storing the final weight.
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~
+// =============================================================================
+
+/**
+ * @class LeaveNode
+ * @brief Leave Node storing the final weight
+*/
 class LeaveNode : public BlendNode {
  public:
   LeaveNode() :
@@ -106,6 +113,8 @@ class LeaveNode : public BlendNode {
   F32 mWeight;
 };
 
+// =============================================================================
 }  // namespace aer
+// =============================================================================
 
 #endif  // AER_ANIMATION_BLEND_NODE_H_

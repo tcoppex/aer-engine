@@ -1,6 +1,5 @@
 // -----------------------------------------------------------------------------
-// CreativeCommons BY-SA 3.0 2013 <Thibault Coppex>
-//
+// CreativeCommons BY-SA 3.0 2014 <Thibault Coppex>
 //
 // -----------------------------------------------------------------------------
 
@@ -12,17 +11,20 @@
 #include "aer/animation/blend_shape.h"
 #include "aer/animation/blend_tree.h"
 
-
+// =============================================================================
 namespace aer {
+// =============================================================================
 
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + 
-///
-/// WIP draft
-/// (idea : mimic the skeleton controller for blend shapes)
-///
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + 
+/**
+ * @class MorphController
+ * @brief Mimic the skeleton controller for blendhsape
+ * @see SkeletonController
+ *
+ * @note WIP draft
+ *
+*/
 class MorphController {
- public:
+public:
   MorphController() = default;
 
   ///
@@ -51,19 +53,22 @@ class MorphController {
   }
   //-----------------------------
 
-
- private:
+private:
   void compute_expressions();
   void update_buffers();
 
-  /// Reference on the blendshapes handler
+  // ---------------------------------------------------------------------------
+  /// @name Attributes
+  // ---------------------------------------------------------------------------
+
+  // Reference on the blendshapes handler
   BlendShape *mBlendShape_ptr = nullptr;
 
-  /// Inputs
+  // Inputs
   Sequence_t mSequence;
   BlendTree  mBlendTree;
 
-  /// Buffer of unpacked blendshape weights [could be shared]
+  // Buffer of unpacked blendshape weights [could be shared]
   std::vector<F32> mWeightsBuffer;
   U32              mTotalExpressions;
 
@@ -71,6 +76,8 @@ class MorphController {
   DISALLOW_COPY_AND_ASSIGN(MorphController);
 };
 
+// =============================================================================
 }  // namespace aer
+// =============================================================================
 
 #endif  // AER_ANIMATION_MORPH_CONTROLLER_H_

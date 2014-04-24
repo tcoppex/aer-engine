@@ -1,6 +1,5 @@
 // -----------------------------------------------------------------------------
-// CreativeCommons BY-SA 3.0 2013 <Thibault Coppex>
-//
+// CreativeCommons BY-SA 3.0 2014 <Thibault Coppex>
 //
 // -----------------------------------------------------------------------------
 
@@ -14,19 +13,19 @@
 #include "aer/memory/stack_allocator.h"
 #include "aer/utils/global_clock.h"
 
-
+// =============================================================================
 namespace aer {
+// =============================================================================
 
 class SKAFile;
 
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + 
-///
-/// Defines a hierarchy of joints used in skeletal animations
-///
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + 
+/**
+ * @class Skeleton
+ * @brief Defines a hierarchy of joints used in skeletal animations
+*/
 class Skeleton {
  public:
-  /// TODO : externalize setup from skaFile
+  // TODO : externalize setup from skaFile
   void init(const SKAFile& skaFile);
 
   const U32 numjoints() const {
@@ -65,15 +64,26 @@ class Skeleton {
   // ----------------------------------------------------------
 
  private:
+  // ---------------------------------------------------------------------------
+  /// @name Constant values
+  // ---------------------------------------------------------------------------
+
   static const U32 kJointNameSize = 32u;
   static const U32 kClipNameSize  = 32u;
+
+  // ---------------------------------------------------------------------------
+  /// @name Initalizers
+  // ---------------------------------------------------------------------------
 
   void init_armature(const SKAFile& skaFile);
   void init_animations(const SKAFile& skaFile);
 
+  // ---------------------------------------------------------------------------
+  /// @name Attributes
+  // ---------------------------------------------------------------------------
 
   // Common
-  StackAllocator mNameBuffer;           // Stock joints and clips name
+  StackAllocator mNameBuffer;           // Stores joints and clips name
 
   /// Armature
   struct {
@@ -89,6 +99,8 @@ class Skeleton {
   std::vector<Matrix4x4> mGlobalBindMatrices;
 };
 
+// =============================================================================
 }  // namespace aer
+// =============================================================================
 
 #endif  // AER_ANIMATION_SKELETON_H_

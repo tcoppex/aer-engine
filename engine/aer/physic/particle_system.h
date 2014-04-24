@@ -50,6 +50,10 @@ struct ParticleBuffer_t {
     tied.resize(size, false);
   }
 
+  void reset_delayed_positions() {
+    p0.assign(p1.begin(), p1.end());
+  }
+
   std::vector<Vector3> p0;        // last position
   std::vector<Vector3> p1;        // current position
   std::vector<F32>     radius;    // radius use for collision

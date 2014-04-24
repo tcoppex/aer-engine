@@ -1,17 +1,16 @@
 // -----------------------------------------------------------------------------
-// CreativeCommons BY-SA 3.0 2013 <Thibault Coppex>
-//
+// CreativeCommons BY-SA 3.0 2014 <Thibault Coppex>
 //
 // -----------------------------------------------------------------------------
-
 
 #include "aer/animation/skeleton.h"
 
 #include "aer/loader/skma.h"
 #include "glm/gtc/matrix_transform.hpp"
 
-
+// =============================================================================
 namespace aer {
+// =============================================================================
 
 void Skeleton::init(const SKAFile& skaFile) {
   const U32 numjoints = skaFile.numbones();
@@ -28,6 +27,8 @@ void Skeleton::init(const SKAFile& skaFile) {
   init_armature(skaFile);
   init_animations(skaFile);
 }
+
+// -----------------------------------------------------------------------------
 
 void Skeleton::init_armature(const SKAFile& skaFile) {
   const SKAFile::TBone* const pBones = skaFile.bones();
@@ -84,6 +85,8 @@ void Skeleton::init_armature(const SKAFile& skaFile) {
   }
 }
 
+// -----------------------------------------------------------------------------
+
 void Skeleton::init_animations(const SKAFile& skaFile) {
   // Note: SKA TSequence are AnimationClip
   //       SKA TFrame are AnimationSample
@@ -135,4 +138,6 @@ void Skeleton::init_animations(const SKAFile& skaFile) {
   }
 }
 
+// =============================================================================
 }  // namespace aer
+// =============================================================================

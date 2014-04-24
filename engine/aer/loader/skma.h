@@ -1,7 +1,6 @@
 // -----------------------------------------------------------------------------
 // CreativeCommons BY-SA 3.0 2013 <Thibault Coppex>
 //
-//
 // -----------------------------------------------------------------------------
 
 #ifndef AER_LOADER_SKMA_H_
@@ -12,29 +11,30 @@
 
 #include "aer/common.h"
 
-
+// =============================================================================
 namespace aer {
+// =============================================================================
 
+// forward declarations
 class SKMFile;
 class SKAFile;
 class MATFile;
 
-
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ +
-///
-/// The SKMA file format is a chunk based format describing
-/// mesh (SKM) & animation (SKA) data for a skeleton model,
-/// along with materials (MAT) informations.
-///
-/// This is the pure translation of the data format and it
-/// should be restructured if datas are intend to be kept 
-/// in memory.
-///
-/// Version note :
-///   Right now bones can be in both SKM & SKA files. 
-///   It should be simplified in future versions.
-///
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ +
+/**
+ * @class SKMAFile
+ * @brief Handles to load files associated with the SKMA file
+ *
+ * The SKMA file format is a chunk based format describing
+ * mesh (SKM) & animation (SKA) data for a skeleton model,
+ * along with materials (MAT) informations.
+ *
+ * This is the pure translation of the data format and it
+ * should be restructured if datas are intend to be kept 
+ * in memory.
+ *
+ * TODO: load unknown chunk types to specialized struct
+ *
+*/
 class SKMAFile {
  public:
   SKMAFile();
@@ -67,8 +67,30 @@ class SKMAFile {
   MATFile *matFile_;
 };
 
+// =============================================================================
 
+#define SKMA_CHUNKHEADER_IDSIZE          20u
 
+/**
+ * @name ChunkHeader_t
+ * @brief Header structure used by SKM / SKA files
+ */
+struct ChunkHeader_t {
+  char        id[SKMA_CHUNKHEADER_IDSIZE];  //
+  U32    dataSize;                     //
+  U32    dataCount;                    //
+  U32    flag;                         //
+
+  ChunkHeader_t() : 
+    dataSize(0u), 
+    dataCount(0u), 
+    flag(0u)
+  {}
+};
+
+// -----------------------------------------------------------------------------
+/// @name Chunk Header data id
+// -----------------------------------------------------------------------------
 #define SKM_HEADERID_MAIN         "SKMHEADER"
 #define SKM_HEADERID_PNTS         "PNTS0000"
 #define SKM_HEADERID_VERT         "VERT0000"
@@ -81,49 +103,32 @@ class SKMAFile {
 #define SKM_HEADERID_SKAINFO      "SKAINFO0"
 
 #define SKA_HEADERID_MAIN         "SKAHEADER"
-#define SKA_HEADERID_BONE         "BONE0000"  //
+#define SKA_HEADERID_BONE         "BONE0000"
 #define SKA_HEADERID_SEQU         "SEQU0000"
 #define SKA_HEADERID_FRAM         "FRAM0000"
 
+// =============================================================================
 
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ +
-///   Header structure used by SKM / SKA files
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ +
-#define SKCHUNKHEADER_IDSIZE          20u
+#define SKM_FACEMATERIAL_NAMESIZE   64u
+#define SKM_SKEYINFO_NAMESIZE       32u
+#define SKM_SKAINFO_NAMESIZE        32u
 
-struct ChunkHeader_t {
-  char        id[SKCHUNKHEADER_IDSIZE];     //
-  aer::U32    dataSize;                     //
-  aer::U32    dataCount;                    //
-  aer::U32    flag;                         //
-
-  ChunkHeader_t() : 
-    dataSize(0u), 
-    dataCount(0u), 
-    flag(0u)
-  {}
-};
-
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ +
-/// SKM (SKeletal Mesh) File handler
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ +
-#define SKFACEMATERIAL_PATHNAMESIZE   64u
-#define SKBONE_NAMESIZE               32u
-#define SKSKINFO_NAMESIZE             32u
-#define SKAINFO_BASENAMESIZE          32u
-
+/**
+ * @class SKMFile
+ * @brief SKeletal Mesh file handler 
+ */
 class SKMFile {
  public:
   struct TVector {
     TVector() = default;
 
-    TVector(aer::F32 x, aer::F32 y, aer::F32 z) :
+    TVector(F32 x, F32 y, F32 z) :
       X(x),
       Y(y),
       Z(z)
     {}
 
-    aer::F32  X, Y, Z;
+    F32  X, Y, Z;
   };
 
   //--
@@ -133,51 +138,52 @@ class SKMFile {
   };
 
   struct TVertex {
-    aer::U32  pointId;
-    aer::F32  U;
-    aer::F32  V;
-    aer::U16  auxTexCoordId;
-    aer::U16  materialId;
+    U32  pointId;
+    F32  U;
+    F32  V;
+    U16  auxTexCoordId;
+    U16  materialId;
   };
 
   struct TFace {
-    aer::U32  v[3];
-    aer::I16    materialId;
-    aer::U16  _padding;
+    U32  v[3];
+    I16    materialId;
+    U16  _padding;
   };
 
+  // [not used]
   struct TVertexMaterial {
-    aer::U32  vertexId;
-    aer::F32  value[3];
-    aer::U16  type;
-    aer::U16  auxVertexMaterialId;
+    U32  vertexId;
+    F32  value[3];
+    U16  type;
+    U16  auxVertexMaterialId;
   };
 
   struct TFaceMaterial {
-    char        name[SKFACEMATERIAL_PATHNAMESIZE];
-    aer::U32    type;
-    aer::U32    auxFaceMaterialId;
+    char        name[SKM_FACEMATERIAL_NAMESIZE];
+    U32    type;
+    U32    auxFaceMaterialId;
   };
 
   struct TBoneWeight {
-    aer::U32  boneId;
-    aer::U32  pointId;
-    aer::F32  weight;
+    U32  boneId;
+    U32  pointId;
+    F32  weight;
   };
 
   struct TSKeyInfo {
-    char name[SKSKINFO_NAMESIZE];
-    aer::U32  start;
-    aer::U32  count;
+    char name[SKM_SKEYINFO_NAMESIZE];
+    U32  start;
+    U32  count;
   };
 
   struct TSKeyData {
-    aer::U32  pointId;
+    U32  pointId;
     TVector   coordRel;
   };
 
   struct TSKAInfo {
-    char      basename[SKAINFO_BASENAMESIZE];
+    char      basename[SKM_SKAINFO_NAMESIZE];
   };
 
 
@@ -186,95 +192,99 @@ class SKMFile {
 
   bool load(const char *filename);
 
-  const TPoint        * points()          const { return points_; }
-  const TVertex       * vertices()        const { return vertices_; }
-  const TFace         * faces()           const { return faces_; }  
-  const TFaceMaterial * face_materials()  const { return face_materials_; }
-  const TBoneWeight   * bone_weights()    const { return bone_weights_; }  
-  const TSKeyInfo     * skey_infos()      const { return skey_infos_; }
-  const TSKeyData     * skey_datas()      const { return skey_datas_; }
+  const TPoint        *const points()          const { return points_; }
+  const TVertex       *const vertices()        const { return vertices_; }
+  const TFace         *const faces()           const { return faces_; }  
+  const TFaceMaterial *const face_materials()  const { return face_materials_; }
+  const TBoneWeight   *const bone_weights()    const { return bone_weights_; }  
+  const TSKeyInfo     *const skey_infos()      const { return skey_infos_; }
+  const TSKeyData     *const skey_datas()      const { return skey_datas_; }
 
-  const aer::U32 numpoints()        const { return numpoints_; }
-  const aer::U32 numvertices()      const { return numvertices_; }
-  const aer::U32 numfaces()         const { return numfaces_; }
-  const aer::U32 numfacematerials() const { return numfacematerials_; }
-  const aer::U32 numboneweights()   const { return numboneweights_; }
-  const aer::U32 numskeyinfos()     const { return numskeyinfos_; }
-  const aer::U32 numskeydatas()     const { return numskeydatas_; }
+  const U32 numpoints()        const { return numpoints_; }
+  const U32 numvertices()      const { return numvertices_; }
+  const U32 numfaces()         const { return numfaces_; }
+  const U32 numfacematerials() const { return numfacematerials_; }
+  const U32 numboneweights()   const { return numboneweights_; }
+  const U32 numskeyinfos()     const { return numskeyinfos_; }
+  const U32 numskeydatas()     const { return numskeydatas_; }
 
+  /// @return True if a skeleton file (.ska) is linked
+  const bool has_skeleton() const { return numskainfos_ != 0u; }
   
+  /// @return the linked skeleton filename if any, nullptr otherwise
   const char* ska_name() const { 
     if (has_skeleton()) {
-      return ska_infos_[0].basename; 
+      return ska_infos_[0u].basename; 
     }
     return nullptr;
   }
 
-  const bool has_skeleton() const { return numskainfos_ > 0u; }
-
 
  private:
-  TPoint*           points_;
-  TVertex*          vertices_;
-  TFace*            faces_;
-  TVertexMaterial*  vertex_materials_;
-  TFaceMaterial*    face_materials_;
-  TBoneWeight*      bone_weights_;
-  TSKeyInfo*        skey_infos_;
-  TSKeyData*        skey_datas_;
-  TSKAInfo*         ska_infos_;
+  TPoint           *points_;
+  TVertex          *vertices_;
+  TFace            *faces_;
+  TVertexMaterial  *vertex_materials_;
+  TFaceMaterial    *face_materials_;
+  TBoneWeight      *bone_weights_;
+  TSKeyInfo        *skey_infos_;
+  TSKeyData        *skey_datas_;
+  TSKAInfo         *ska_infos_;
 
-  aer::U32 numpoints_;
-  aer::U32 numvertices_;
-  aer::U32 numfaces_;
-  aer::U32 numvertexmaterials_;
-  aer::U32 numfacematerials_;
-  aer::U32 numboneweights_;
-  aer::U32 numskeyinfos_;
-  aer::U32 numskeydatas_;
-  aer::U32 numskainfos_;
+  U32 numpoints_;
+  U32 numvertices_;
+  U32 numfaces_;
+  U32 numvertexmaterials_;
+  U32 numfacematerials_;
+  U32 numboneweights_;
+  U32 numskeyinfos_;
+  U32 numskeydatas_;
+  U32 numskainfos_;
 };
 
+// =============================================================================
 
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ +
-/// SKA (SKeletal Animation) File handler
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ +
+#define SKA_BONE_NAMESIZE       32u
 #define SKA_SEQUENCE_NAMESIZE   32u
 
+/**
+ * @class SKAFile
+ * @brief SKeletal Animation file handler 
+ */
 class SKAFile {
  public:
   typedef SKMFile::TVector TVector;
 
   struct TQuaternion { 
-    aer::F32  W, X, Y, Z; 
+    F32  W, X, Y, Z; 
   };
 
   struct TJoint {
     TQuaternion qRotation;
     TVector     vTranslation;
-    aer::F32    fScale;
+    F32    fScale;
   };
 
   //--
 
   struct TBone {
-    char        name[SKBONE_NAMESIZE];
-    aer::U32    parentId;
+    char        name[SKA_BONE_NAMESIZE];
+    U32    parentId;
     TJoint      joint;
   };
 
   struct TSequence {
     char      name[SKA_SEQUENCE_NAMESIZE];
-    aer::U32  startFrame;
-    aer::U32  numFrame;
-    aer::F32  animRate;
-    aer::U32  flag;
+    U32  startFrame;
+    U32  numFrame;
+    F32  animRate;
+    U32  flag;
   };
   
   struct TFrame {
     TQuaternion  qRotation;
     TVector      vTranslate;
-    aer::F32     fScale;
+    F32     fScale;
   };
 
 
@@ -287,36 +297,35 @@ class SKAFile {
   const TSequence   *const sequences() const { return sequences_; }
   const TFrame      *const frames()    const { return frames_;    }
 
-  const aer::U32 numbones()     const { return numbones_;     }
-  const aer::U32 numsequences() const { return numsequences_; }
-  const aer::U32 numframes()    const { return numframes_;    }
+  const U32 numbones()     const { return numbones_;     }
+  const U32 numsequences() const { return numsequences_; }
+  const U32 numframes()    const { return numframes_;    }
 
 
  private:
-  TBone*      bones_;
-  TSequence*  sequences_;
-  TFrame*     frames_;
+  TBone      *bones_;
+  TSequence  *sequences_;
+  TFrame     *frames_;
 
-  aer::U32 numbones_;
-  aer::U32 numsequences_;
-  aer::U32 numframes_;
+  U32 numbones_;
+  U32 numsequences_;
+  U32 numframes_;
 };
 
+// =============================================================================
 
-
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ +
-/// MAT (MATerial) File handler
-///
-/// Note : 
-///  Actual materials handling is very simple
-///  and does not scale well. It will be redesign
-///  in further versions.
-///
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ +
 #define MAT_NAME_SIZE         64u
 #define MAT_TYPENAME_SIZE     32u
 #define MAT_TEXTUREPATH_SIZE  64u
 
+/**
+ * @class MATFile
+ * @brief MATerial file handler
+ *
+ * Note : 
+ *  Actual implementation is very simple and does not scale well. 
+ *  It will be redesign in further versions.
+*/
 class MATFile {
  public:
   enum MaterialType {
@@ -336,7 +345,7 @@ class MATFile {
     {}
 
     ~MaterialData() {      
-      for (aer::U32 i = 0u; i < kNumMaterialType; ++i) {
+      for (U32 i = 0u; i < kNumMaterialType; ++i) {
         AER_SAFE_DELETEV(mList[i]);
       }
     }
@@ -347,24 +356,23 @@ class MATFile {
 
   bool load(const char* filename);
 
-
   const char* filepath() const {
     return filepath_.c_str();
   }
 
-  const char* material_name(const aer::U32 id) const {
+  const char* material_name(const U32 id) const {
     return material_datas_[id].name;
   }
 
   const char* material_from_name(const std::string& name,
                                  const MaterialType type) const;
 
-  const char* material_from_id(const aer::U32 id,
+  const char* material_from_id(const U32 id,
                                const MaterialType type) const {
     return material_datas_[id].mList[type];
   }
 
-  const aer::U32 count() const {
+  const U32 count() const {
     return material_datas_.size();
   }
 
@@ -374,6 +382,8 @@ class MATFile {
   std::string               filepath_;
 };
 
+// =============================================================================
 }  // namespace aer
+// =============================================================================
 
 #endif  // AER_LOADER_SKMA_H_

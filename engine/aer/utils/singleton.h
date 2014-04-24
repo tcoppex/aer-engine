@@ -20,8 +20,7 @@ namespace aer {
 ///
 /// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + 
 template <class T>
-class Singleton
-{
+class Singleton {
  public:
   static
   void Initialize() {

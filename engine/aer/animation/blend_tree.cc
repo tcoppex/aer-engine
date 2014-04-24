@@ -1,17 +1,19 @@
 // -----------------------------------------------------------------------------
-// CreativeCommons BY-SA 3.0 2013 <Thibault Coppex>
-//
+// CreativeCommons BY-SA 3.0 2014 <Thibault Coppex>
 //
 // -----------------------------------------------------------------------------
 
-
 #include "aer/animation/blend_tree.h"
 
+// =============================================================================
 namespace aer {
+// =============================================================================
 
 BlendTree::BlendTree() :
   mRoot(nullptr)
 {}
+
+// -----------------------------------------------------------------------------
 
 BlendTree::~BlendTree() {
   for (auto &node : mNodeMap) {
@@ -23,8 +25,10 @@ BlendTree::~BlendTree() {
   }
 }
 
+// -----------------------------------------------------------------------------
+
 void BlendTree::evaluate(const F32 factor, Sequence_t& sequence) {
-  AER_ASSERT(nullptr != mRoot);
+  AER_CHECK(nullptr != mRoot);
 
   // Recursively compute blend weight for each clips
   mRoot->compute_weight(factor);
@@ -39,9 +43,10 @@ void BlendTree::evaluate(const F32 factor, Sequence_t& sequence) {
   }
 }
 
-void BlendTree::activate_leaves(bool bEnable, Sequence_t& sequence) {
-  AER_ASSERT(nullptr != mRoot);
+// -----------------------------------------------------------------------------
 
+void BlendTree::activate_leaves(bool bEnable, Sequence_t& sequence) {
+  AER_CHECK(nullptr != mRoot);
   AER_WARNING("[TODO] profile BlendTree's evaluate & active_leaves.");
 
   for (auto &leave : mLeaveMap) {
@@ -58,11 +63,15 @@ void BlendTree::activate_leaves(bool bEnable, Sequence_t& sequence) {
   }
 }
 
+// -----------------------------------------------------------------------------
+
 BlendNode* BlendTree::add_node(const std::string& name, BlendNode *node) {
   mNodeMap[name] = node;
   mRoot = node;
   return node;
 }
+
+// -----------------------------------------------------------------------------
 
 LeaveNode* BlendTree::add_leave(const std::string& name) {
   LeaveNode *leave = new LeaveNode();
@@ -73,4 +82,6 @@ LeaveNode* BlendTree::add_leave(const std::string& name) {
   return leave;
 }
 
+// =============================================================================
 }  // namespace aer
+// =============================================================================

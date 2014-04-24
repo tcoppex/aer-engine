@@ -1,6 +1,5 @@
 // -----------------------------------------------------------------------------
-// CreativeCommons BY-SA 3.0 2013 <Thibault Coppex>
-//
+// CreativeCommons BY-SA 3.0 2014 <Thibault Coppex>
 //
 // -----------------------------------------------------------------------------
 
@@ -10,63 +9,76 @@
 #include <vector>
 #include "aer/common.h"
 
+// =============================================================================
 namespace aer {
+// =============================================================================
 
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + 
-///
 /// Common datastructures used for animations
-///
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + 
 
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~
-/// Pose transformation for a joint
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~
+// -----------------------------------------------------------------------------
+
+/**
+ * @struct JointPose_t
+ * @brief Pose transformation for a joint
+*/
 struct JointPose_t {
   Quaternion   qRotation    = Quaternion(1.0f, 0.0f, 0.0f, 0.0f);
   Vector3      vTranslation = Vector3(0.0f);
   F32          fScale       = 1.0f;
 };
 
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~
-/// Set of transformations for an animation 
-/// sample
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~
+// -----------------------------------------------------------------------------
+
+/**
+ * @struct AnimationSample_t
+ * @brief Set of transformations for an animation sample
+*/
 struct AnimationSample_t {
   std::vector<JointPose_t> joints;
 };
 
+// -----------------------------------------------------------------------------
 
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~
-/// Basic animation action
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~
+/**
+ * @struct Action_t
+ * @brief Basic animation action
+*/
 struct Action_t {
   virtual F32 duration() const = 0;
 
-  char *pName  = nullptr;
-  bool bLoop   = false;
+  char *pName  = nullptr;           ///< external pointer to the action name
+  bool bLoop   = false;             ///< true if the action is looping
 };
 
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~
-/// Set of samples defining a skeleton 
-/// animation clip
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~
+// -----------------------------------------------------------------------------
+
+/**
+ * @struct AnimationClip_t
+ * @brief Set of samples defining a skeleton animation clip
+ * @see Action_t
+*/
 struct AnimationClip_t : Action_t {
   ~AnimationClip_t() {
     AER_SAFE_DELETEV(samples);
   }
 
+  /// @return the duration of the clip in second
   F32 duration() const override {
     return numframes / framerate;
   }
 
-  AnimationSample_t   *samples  = nullptr;
-  U32   numframes = 0u;
-  F32   framerate = 0u;
+  AnimationSample_t *samples = nullptr;     ///< buffer of samples
+  U32  numframes = 0u;                      ///< total number of frames
+  F32  framerate = 0u;                      ///< framerate in seconds
 };
 
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~
-/// Set of BlendShape making an expression
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~
+// -----------------------------------------------------------------------------
+
+/**
+ * @struct Expression_t
+ * @brief Set of blendshape making an expression
+ * @see Action_t
+*/
 struct Expression_t : Action_t {
   virtual F32 duration() const override {
     return clip_duration;
@@ -74,14 +86,15 @@ struct Expression_t : Action_t {
 
   F32 clip_duration;
   bool bManualBypass;
-
   std::vector<U32> indices;
 };
 
+// -----------------------------------------------------------------------------
 
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~
-/// Animation being played
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~
+/**
+ * @struct SequenceClip_t
+ * @brief Animation being played
+*/
 struct SequenceClip_t {
   Action_t *action_ptr = nullptr;
 
@@ -94,8 +107,8 @@ struct SequenceClip_t {
   //bool bFrozen   = false;
 
 
-  /// Compute the localtime for the sequence, looping the animation if needed.
-  /// Return false if the sequence finished.
+  /// Compute the localtime for the sequence, looping the animation if needed
+  /// @return false if the sequence finished
   bool compute_localtime(const F32 global_time, F32& local_time) const {
     const Action_t &action = *(action_ptr); //
     const F32 clip_duration = action.duration();
@@ -141,21 +154,22 @@ struct SequenceClip_t {
     return true;
   }
 
-  /// Return the phase of the animation, given the local_time
+  /// @return the phase of the animation, given the local_time
   F32 phase(const F32 local_time) const {
     return local_time / action_ptr->duration();
   }
 };
 
+// -----------------------------------------------------------------------------
 
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~
 /// Set of animations being played
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~
+
 //std::unordered_set<SequenceClip_t> Sequence_t;
 typedef std::vector<SequenceClip_t> Sequence_t;
 typedef Sequence_t::iterator        SequenceIterator_t;
 
-
+// =============================================================================
 }  // namespace aer
+// =============================================================================
 
 #endif  // AER_ANIMATION_COMMON_H_

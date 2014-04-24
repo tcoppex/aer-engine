@@ -47,6 +47,7 @@ void GlobalClock::update() {
 
   F64 lastFrameTime = frame_time_;
   frame_time_ = relative_time(MILLISECOND);
+  delta_time_ = frame_time_ - lastFrameTime;
 
   if ((frame_time_ - last_fps_time_) >= 1000.0) {
     last_fps_time_ = frame_time_;
@@ -54,7 +55,17 @@ void GlobalClock::update() {
     framecount_ = 0u;
   }
 
-  delta_time_ = frame_time_ - lastFrameTime;
+  if (!is_paused()) {
+    application_delta_time_ = time_scale_ * delta_time_;
+    application_time_ += application_delta_time_;
+  } else {
+    application_delta_time_ = 0.0;
+  }
+}
+
+void GlobalClock::stabilize_delta_time(const aer::F64 dt) {
+  frame_time_ = relative_time(MILLISECOND) - dt;
+  delta_time_ = dt;
 
   if (!is_paused()) {
     application_delta_time_ = time_scale_ * delta_time_;

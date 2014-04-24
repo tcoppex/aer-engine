@@ -12,29 +12,26 @@
 #include "aer/core/opengl.h"
 #include "aer/device/shader.h"
 
-
+// =============================================================================
 namespace aer {
+// =============================================================================
 
 struct UniformLocation_t;
 
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ +
-///
-/// Wrapper around OpenGL program object.
-///
-/// TODO : to use const ShaderView references, release them
-///        manually on Program::release() instead of
-///        ShaderView::release()
-///
-/// Note : this is NOT a DeviceResource object.
-///
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ +
+
+/**
+ * @class Program
+ * @brief Wrapper around OpenGL program object
+ *
+ *
+ * @note This is not a DeviceResource object
+*/
 class Program {
- public:
+public:
   static
   void Deactivate() {
     glUseProgram(0u);
   }
-
 
   Program() :
     id_(0u),
@@ -49,9 +46,9 @@ class Program {
   /// Create a program object
   inline bool create();
 
-  /// Create a program object from a single shader.
-  /// This automatically make it separable.
-  inline bool create(ShaderView const* shader);
+  /// Create a program object from a single shader
+  /// It automatically makes it separable
+  inline bool create(ShaderView* shader);
 
   /// Release the program object
   inline void release();
@@ -64,7 +61,7 @@ class Program {
   // Note : this methods make the program 'dirty' (ie. needs relink)
   // --------------------------------------------------------
   /// Add a shader to attach to the program object
-  inline void add_shader(ShaderView const* shader);
+  inline void add_shader(ShaderView* shader);
 
   /// Load & add a shader using the ShaderProxy
   //inline void load_shader(const char* id);
@@ -90,7 +87,6 @@ class Program {
   inline void set_separable(bool bSeparable);
   // --------------------------------------------------------
 
-
   /// Make the program current
   inline void activate();
 
@@ -98,7 +94,10 @@ class Program {
   inline void deactivate();
 
 
-  /// Getters
+  // ---------------------------------------------------------------------------
+  /// @name Getters
+  // ---------------------------------------------------------------------------
+
   inline U32 id() const;
 
   inline bool has_stages(GLbitfield stages) const;
@@ -107,14 +106,13 @@ class Program {
   inline bool is_dirty()     const;
   inline bool is_separable() const;
 
-  
-  // --- --- --- --- --- --- --- --- --- ---
-  // Direct State Access Uniforms handling
-  // --- --- --- --- --- --- --- --- --- ---
+
+  // ---------------------------------------------------------------------------
+  /// @name Direct State Access uniforms handling
+  // ---------------------------------------------------------------------------
 
   /// Specify the value of a uniform variable for a specified program object
   inline UniformLocation_t uniform_location(const char *name);
-
 
   // Scalars
   inline void set_uniform(const UniformLocation_t &loc, I32 v) const;
@@ -177,29 +175,43 @@ class Program {
   // -infos with glGetProgramStageiv / glGetProgramResource
 
 
- private:
-  typedef std::vector<ShaderView const*> ShaderSet_t;
+private:
+  typedef std::vector<ShaderView*> ShaderSet_t;
+
+  // ---------------------------------------------------------------------------
+  /// @name Attributes
+  // ---------------------------------------------------------------------------
 
   GLuint        id_;
   GLbitfield    bitfield_;
   ShaderSet_t   shaders_;
   bool          bDirty_;
 
+
   DISALLOW_COPY_AND_ASSIGN(Program);
 };
 
+// -----------------------------------------------------------------------------
 
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ +
-/// Wrapper around uniform location
-/// index
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ +
+/**
+ * @struct UniformLocation_t
+ * @brief Wrapper around uniform location index
+*/
 struct UniformLocation_t {
-  UniformLocation_t(I32 loc) : index(loc) {}
-  bool is_valid() const {return index >= 0;}
-  I32 index;
+  UniformLocation_t(I32 loc)
+    : index(loc) 
+  {}
+
+  bool is_valid() const {
+    return index >= 0;
+  }
+
+  I32 index = -1;
 };
 
+// =============================================================================
 }  // namespace aer
+// =============================================================================
 
 #include "aer/device/program-inl.h"
 
@@ -209,7 +221,6 @@ struct UniformLocation_t {
 
 #if 0
 /// On subroutines uniform setting
-
 
     // Get subroutine info
     GLint suLoc = glGetSubroutineUniformLocation( pgm.getId(), GL_COMPUTE_SHADER, "suHBAO");

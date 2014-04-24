@@ -10,15 +10,16 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/quaternion.hpp"
 
-
-
-
+// =============================================================================
 namespace aer {
+// =============================================================================
 
+// -----------------------------------------------------------------------------
 /// Static fields
+// -----------------------------------------------------------------------------
+
 SkeletonController::SharedData_t SkeletonController::sShared;
 SkeletonProxy SkeletonController::sSkeletonProxy;
-
 
 void SkeletonController::SharedData_t::init(U32 tbo_elemsize) {
   if (bInit) {
@@ -47,9 +48,9 @@ void SkeletonController::SharedData_t::init(U32 tbo_elemsize) {
   bInit = true;
 }
 
-//-----------------------------------------------------------------------------
-
+// =============================================================================
 namespace {
+// =============================================================================
 
 /// Apply a linear interpolation on two samples
 void LerpSamples(const AnimationSample_t &s1,
@@ -62,7 +63,9 @@ bool ComputePose(const F32 global_time,
                  SequenceClip_t& sequence_clip,
                  AnimationSample_t& dst_sample);
 
+// =============================================================================
 }  // namespace
+// =============================================================================
 
 
 bool SkeletonController::init(const std::string &skeleton_ref) {
@@ -93,6 +96,8 @@ bool SkeletonController::init(const std::string &skeleton_ref) {
   return true;
 }
 
+// -----------------------------------------------------------------------------
+
 void SkeletonController::update() {
   /// Activates each sequence's leaves on the blend tree
   /// [TODO: set once by the Action State Machine each time a state is entered]
@@ -100,7 +105,6 @@ void SkeletonController::update() {
 
   /// 1) Compute weight for active leaves
   mBlendTree.evaluate(1.0f, mSequence);
-
 
   /// 2) Compute the static pose of each contributing clips
   U32 active_count = compute_poses();
@@ -119,6 +123,8 @@ void SkeletonController::update() {
   generate_skinning_datas();
 }
 
+// -----------------------------------------------------------------------------
+
 U32 SkeletonController::compute_poses() {
   F32 global_time = GlobalClock::Get().application_time(SECOND);
 
@@ -131,6 +137,8 @@ U32 SkeletonController::compute_poses() {
 
   return active_count;
 }
+
+// -----------------------------------------------------------------------------
 
 void SkeletonController::blend_poses(U32 active_count) {
 
@@ -204,6 +212,8 @@ void SkeletonController::blend_poses(U32 active_count) {
   }
 }
 
+// -----------------------------------------------------------------------------
+
 void SkeletonController::generate_global_pose_matrices() {
   const I32 *parent_ids = mSkeleton->parent_ids();
 
@@ -221,6 +231,7 @@ void SkeletonController::generate_global_pose_matrices() {
   }
 }
 
+// -----------------------------------------------------------------------------
 
 void SkeletonController::generate_skinning_datas() {
   const U32 numSkinningData = mGlobalPoseMatrices.size(); 
@@ -235,7 +246,6 @@ void SkeletonController::generate_skinning_datas() {
     // convert to Dual Quaternions
     mDQuaternions[i] = DualQuaternion(mSkinningMatrices[i]);
   }
-
 
   /// Upload to the shared skinning texture buffer (device)
   DeviceBuffer &buffer = sShared.skinning.buffer;
@@ -261,7 +271,9 @@ void SkeletonController::generate_skinning_datas() {
 }
 
 
+// =============================================================================
 namespace {
+// =============================================================================
 
 void LerpSamples(const AnimationSample_t &s1,
                  const AnimationSample_t &s2,
@@ -280,11 +292,13 @@ void LerpSamples(const AnimationSample_t &s1,
     const JointPose_t &J2 = s2.joints[i];
 
     // for quaternions, use shortMix (slerp) or fastMix (nlerp) but NOT mix
-    dst.qRotation    = glm::fastMix(J1.qRotation,J2.qRotation,    factor);
+    dst.qRotation    = glm::shortMix(J1.qRotation,J2.qRotation,    factor); //fastMix
     dst.vTranslation = glm::mix(J1.vTranslation, J2.vTranslation, factor);
     dst.fScale       = glm::mix(J1.fScale,       J2.fScale,       factor);
   }
 }
+
+// -----------------------------------------------------------------------------
 
 bool ComputePose(const F32 global_time,
                  SequenceClip_t& sequence_clip,
@@ -313,6 +327,10 @@ bool ComputePose(const F32 global_time,
   return true;
 }
 
+// =============================================================================
 }  // namespace
+// =============================================================================
 
+// =============================================================================
 }  // namespace aer
+// =============================================================================

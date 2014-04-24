@@ -56,21 +56,30 @@ void Application::run() {
   InitializeSingletons();
   init();
 
-  // First clock update can occurs very long time after the app initialization.
-  // Therefore we update a first time here to reset the value.
-  GlobalClock::Get().update(); //
-
   if (nullptr == window_) {
     Logger::Get().error("application launche with no window");
   }
 
+
+  GlobalClock  &clock = GlobalClock::Get();
+
   /// Mainloop
   while (!bExit_) {
-    GlobalClock::Get().update();
+
+    // First clock update can occurs very long time after the app initialization.
+    // Therefore we stabilize the dt the first few frames. XXX
+    if (clock.framecount_total() < 4) {
+      aer::F64 dt = 1000.0f/(fps_limit_);
+      clock.stabilize_delta_time(dt);
+    }
+
+    clock.update();
+
     EventsHandler::Get().update(window());
-    
     events();
+
     frame();
+
     (*window_).swap();
 
     if (bExit_) {
