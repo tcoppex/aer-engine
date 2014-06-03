@@ -9,16 +9,9 @@
 #include "aer/utils/logger.h"
 
 
+// =============================================================================
 namespace aer {
-
-Framebuffer::Framebuffer() :
-  RenderTarget(),
-  num_colors_(0u),
-  colors_ptr_{nullptr},
-  special_ptr_(nullptr),
-  attachments_{GL_NONE},
-  bInitialized_(false)
-{}
+// =============================================================================
 
 void Framebuffer::bind(GLenum target) {
   RenderTarget::bind(target);
@@ -27,6 +20,8 @@ void Framebuffer::bind(GLenum target) {
     DrawBuffers(kAttachmentMax, attachments_);
   }
 }
+
+// -----------------------------------------------------------------------------
 
 void Framebuffer::attach_color(const Texture *color_tex_ptr,
                                GLenum attachment) {
@@ -56,6 +51,8 @@ void Framebuffer::attach_color(const Texture *color_tex_ptr,
                        0);
 }
 
+// -----------------------------------------------------------------------------
+
 void Framebuffer::attach_special(const Texture2D *special_tex_ptr,
                                  GLenum attachment) {
   AER_ASSERT(nullptr != special_tex_ptr);
@@ -74,6 +71,7 @@ void Framebuffer::attach_special(const Texture2D *special_tex_ptr,
                        0);
 }
 
+// -----------------------------------------------------------------------------
 
 void Framebuffer::blit(Framebuffer *src_fbo, 
                        const Vector4 &src_coords,
@@ -96,6 +94,7 @@ void Framebuffer::blit(Framebuffer *src_fbo,
   }
 }
 
+// -----------------------------------------------------------------------------
 
 bool Framebuffer::CheckSpecialFormat(GLenum internalFormat,
                                      GLenum attachment) {
@@ -113,4 +112,6 @@ bool Framebuffer::CheckSpecialFormat(GLenum internalFormat,
   return false;
 }
 
+// =============================================================================
 }  // namespace aer
+// =============================================================================

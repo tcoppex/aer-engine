@@ -48,6 +48,8 @@ class ProgramPipeline : public DeviceResource {
   }
 
   /// Use a program stages as part of the current pipeline
+  /// @param stages : bitfield specifying the program stages to bind
+  /// @param program : pointer to a program to bind, or nullptr to unbind
   void use_program_stages(GLbitfield stages, const Program *program) {
     if (!program) {
       bitfield_ &= ~stages;

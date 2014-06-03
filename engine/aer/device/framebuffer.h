@@ -12,24 +12,30 @@
 #include "aer/device/render_target.h"
 
 
+// =============================================================================
 namespace aer {
+// =============================================================================
 
 class Texture;
 class Texture2D;
 
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + 
-///
-///
-///
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + 
+/**
+ * @class Framebuffer
+ */
 class Framebuffer : public RenderTarget {
  public:
   static void DrawBuffers(U32 count, GLenum attachments[]) {
     glDrawBuffers(count, attachments);
   }
 
-
-  Framebuffer();
+  Framebuffer() :
+    RenderTarget(),
+    num_colors_(0u),
+    colors_ptr_{nullptr},
+    special_ptr_(nullptr),
+    attachments_{GL_NONE},
+    bInitialized_(false)
+  {}
 
   /// Overrided, call DrawBuffers on default setup
   void bind(GLenum target=GL_FRAMEBUFFER);
@@ -75,7 +81,9 @@ class Framebuffer : public RenderTarget {
 
   bool bInitialized_;
 };
-  
+
+// =============================================================================
 }  // namespace aer
+// =============================================================================
 
 #endif  // AER_DEVICE_FRAMEBUFFER_H_

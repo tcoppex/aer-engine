@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// CreativeCommons BY-SA 3.0 2013 <Thibault Coppex>
+// CreativeCommons BY-SA 3.0 2014 <Thibault Coppex>
 //
 // -----------------------------------------------------------------------------
 
@@ -9,18 +9,22 @@
 #include "aer/common.h"
 #include "aer/device/device_resource.h"
 
+// =============================================================================
 namespace aer {
+// =============================================================================
 
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + 
-///
-/// Wrapper around OpenGL sampler object.
-///
-/// A sampler describes how a texture / image is sampled
-/// on the device.
-///
-/// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + 
+/**
+ * @class Sampler
+ * @brief Wrapper around OpenGL sampler object
+ *
+ * Describes how a texture / image is sampled on the device
+*/
 class Sampler : public DeviceResource { 
- public:
+public:
+  // ---------------------------------------------------------------------------
+  /// @name Static methods
+  // ---------------------------------------------------------------------------
+
   static
   void Unbind(U32 unit) {
     glBindSampler(unit, 0u);
@@ -33,17 +37,25 @@ class Sampler : public DeviceResource {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  /// @name Constructor
+  // ---------------------------------------------------------------------------
+
   Sampler() :
     DeviceResource(),
     bUseMipmapFilter_(true)
   {}
 
-  void generate() {
+  // ---------------------------------------------------------------------------
+  /// @name DeviceResource methods
+  // ---------------------------------------------------------------------------
+
+  void generate() override {
     AER_ASSERT(!is_generated());
     glGenSamplers(1, &id_);
   }
 
-  void release() {
+  void release() override {
     if (is_generated()) {
       glDeleteSamplers(1, &id_);
       id_ = 0u;
@@ -58,13 +70,18 @@ class Sampler : public DeviceResource {
     Unbind(unit);
   }
 
-  /// -- Getters --
+  // ---------------------------------------------------------------------------
+  /// @name Getters
+  // ---------------------------------------------------------------------------
+
   bool use_mipmap_filter() const { 
     return bUseMipmapFilter_; 
   }
 
 
-  /// -- Setters --
+  // ---------------------------------------------------------------------------
+  /// @name Setters
+  // ---------------------------------------------------------------------------
 
   /// Set minification filter
   void set_min_filter(GLint filter) {
@@ -160,11 +177,17 @@ class Sampler : public DeviceResource {
 #endif
   }
 
-  private:
-    bool bUseMipmapFilter_;
+private:
+  // ---------------------------------------------------------------------------
+  /// @name Attributes
+  // ---------------------------------------------------------------------------
+
+  bool bUseMipmapFilter_;
 };
 
+// =============================================================================
 }  // namespace aer
+// =============================================================================
 
 #include "aer/device/default_samplers.h"
 
