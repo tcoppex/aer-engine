@@ -140,19 +140,19 @@ const uchar* GetGLSLVersion() {
   return glGetString(GL_SHADING_LANGUAGE_VERSION);
 }
 
-const I32 GetMinorVersion() {
+I32 GetMinorVersion() {
   return GetI(GL_MINOR_VERSION);
 }
 
-const I32 GetMajorVersion() {
+I32 GetMajorVersion() {
   return GetI(GL_MAJOR_VERSION);
 }
 
-const I32 GetAvailableMemory() {
+I32 GetAvailableMemory() {
   return GetI(GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX); 
 }
 
-const I32 GetCurrentMemory() {
+I32 GetCurrentMemory() {
   return GetI(GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX);
 }
 

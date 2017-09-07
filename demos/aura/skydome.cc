@@ -66,21 +66,23 @@ void SkyDome::render(const aer::Camera &camera) {
 
 
   mProgram.activate();
+    mProgram.set_uniform("uModelViewProjMatrix", mvp);
+    mProgram.set_uniform("uSkyColor", mAttribs.color);
+    mProgram.set_uniform("uSkyClock", sky_clock);
 
-  mProgram.set_uniform("uModelViewProjMatrix", mvp);
-  mProgram.set_uniform("uSkyColor", mAttribs.color);
-  mProgram.set_uniform("uSkyClock", sky_clock);
-  mProgram.set_uniform("uSkyTex", 0);
-  aer::DefaultSampler::LinearRepeat().bind(0);
-  mTexture.bind(0);
+    mProgram.set_uniform("uSkyTex", 0);
 
-  mMesh.draw();
+    aer::DefaultSampler::LinearRepeat().bind(0);
+    mTexture.bind(0);
 
-  mTexture.unbind();
-  aer::Sampler::Unbind(0);
+    mMesh.draw();
+
+    mTexture.unbind();
   aer::Program::Deactivate();
 
+  aer::Sampler::Unbind(0);
   aer::opengl::PushStates(glstates);
+
   CHECKGLERROR();
 }
 

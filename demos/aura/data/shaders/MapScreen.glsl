@@ -41,9 +41,11 @@ in VDataBlock {
 layout(location = 0) out vec4 fragColor;
 
 void main() {
-  float ao = texture(uAOTex, IN.texCoord).r;
-  //ao = smoothstep(0.0f, 1.0f, ao*ao);
   vec4 color = texture(uSceneTex, IN.texCoord);
 
-  fragColor = ao * color;
+  float ao = texture(uAOTex, IN.texCoord).r;
+  //ao = smoothstep(0.0f, 1.0f, ao*ao);
+  color.rgb *= ao;
+
+  fragColor = color;
 }

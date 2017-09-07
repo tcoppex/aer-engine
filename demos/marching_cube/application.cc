@@ -36,7 +36,7 @@ void Application::init() {
                  aer::Vector3(0.0f, 1.0f, 0.0f));
 
   aer::F32 ratio = window().display().aspect_ratio();
-  aer::Frustum frustum(60.0f, ratio, 0.01f, 1000.0f);
+  aer::Frustum frustum(glm::radians(60.0f), ratio, 0.01f, 1000.0f);
 
   mCamera = new aer::FreeCamera(view, frustum);
   mCamera->set_motion_factor(0.20f);
@@ -120,7 +120,6 @@ void Application::help() {
   }
 
   fputc('\n', stdout);
-  int c;
   for (int c = fgetc(fd); c != EOF; c = fgetc(fd)) {
     fputc(c, stdout);
   }

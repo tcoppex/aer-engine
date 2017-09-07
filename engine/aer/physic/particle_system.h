@@ -23,7 +23,7 @@ namespace aer {
 /// Constraint between two particles
 /// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~
 struct Spring_t {
-  enum SpringType {
+  enum Type {
     STRUCTURAL,
     SHEAR,
     BEND,
@@ -43,7 +43,7 @@ struct Spring_t {
 struct ParticleBuffer_t {
   U32 Size() const {return p0.size();}
 
-  U32 Resize(size_t size) {
+  void Resize(size_t size) {
     p0.resize(size);
     p1.resize(size);
     radius.resize(size, 0.0f);
@@ -54,10 +54,10 @@ struct ParticleBuffer_t {
     p0.assign(p1.begin(), p1.end());
   }
 
-  std::vector<Vector3> p0;        // last position
-  std::vector<Vector3> p1;        // current position
-  std::vector<F32>     radius;    // radius use for collision
-  std::vector<bool>    tied;      // true if particle static
+  std::vector<Vector3> p0;        //< last position
+  std::vector<Vector3> p1;        //< current position
+  std::vector<F32>     radius;    //< radius use for collision
+  std::vector<bool>    tied;      //< true if particle static [prefer inverse of mass, with 0 = fixed]
 };
 
 /// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~

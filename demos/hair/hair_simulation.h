@@ -32,8 +32,10 @@ class HairSimulation {
   static const aer::U32 kNumControlPoints = kNumControlSegment + 1u;
 
   HairSimulation() :
-    numlines_(16.0f),
-    numlines_subsegment_(8.0f),
+    numlines_(16),
+    numlines_subsegment_(8),
+    numlines_tracking_(static_cast<aer::F32>(numlines_)),
+    numlines_subsegment_tracking_(static_cast<aer::F32>(numlines_subsegment_)),
     bCurlHair_(true),
     bPauseSimulation_(false)
   {}
@@ -67,9 +69,13 @@ class HairSimulation {
   aer::Program      render_scalp_pgm_;
   std::vector<aer::Vector3> tangents_buffer_;
 
-  /// Rendering parameters
-  aer::F32 numlines_;
-  aer::F32 numlines_subsegment_;
+  /// Rendering parameters.
+  aer::I32 numlines_;
+  aer::I32 numlines_subsegment_;
+  
+  // Event tracking rendering params.
+  aer::F32 numlines_tracking_;
+  aer::F32 numlines_subsegment_tracking_;
   
   /// States
   bool bCurlHair_;

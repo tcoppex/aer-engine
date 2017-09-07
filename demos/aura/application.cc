@@ -26,9 +26,11 @@ Application::~Application() {
 // -----------------------------------------------------------------------------
 
 void Application::init() {
+  srand(time(NULL));
+
   /// Window
   aer::Display_t display(1280, 720);
-  //display.msaa_level = 4u;
+  display.msaa_level = 0u;
   create_window(display, "aura");
 
   // Enable fps control
@@ -41,7 +43,7 @@ void Application::init() {
                  aer::Vector3(0.0f, 1.0f, 0.0f));
 
   aer::F32 ratio = window().display().aspect_ratio();
-  aer::Frustum frustum(60.0f, ratio, 0.1f, 1000.0f);
+  aer::Frustum frustum(glm::radians(60.0f), ratio, 0.1f, 1000.0f);
 
   mCamera = new aer::FreeCamera(view, frustum);
   mCamera->set_motion_factor(0.20f);
@@ -66,7 +68,6 @@ void Application::init() {
   glCullFace(GL_BACK);
 
   // Application settings
-  srand(time(NULL));
   init_textures();
   init_shaders();
   init_scene();
@@ -85,11 +86,11 @@ void Application::init_textures() {
   // - Buffer textures
   mBufferingPass.texRGBA.generate();
   mBufferingPass.texRGBA.bind();
-  mBufferingPass.texRGBA.allocate(GL_RGBA8, width, height);
+  mBufferingPass.texRGBA.allocate(GL_RGBA8, width, height, 1u, true);
 
   mBufferingPass.texDEPTH.generate();
   mBufferingPass.texDEPTH.bind();
-  mBufferingPass.texDEPTH.allocate(GL_DEPTH_COMPONENT24, width, height);
+  mBufferingPass.texDEPTH.allocate(GL_DEPTH_COMPONENT24, width, height, 1u, true);
   aer::Texture::Unbind(GL_TEXTURE_2D);
 
   // - FBO
@@ -130,7 +131,8 @@ void Application::init_scene() {
   mScene.character.init();
   mScene.skydome.init();
 
-  mScene.floorPlane.init(32.0f, 32.0f, 8u);
+  const aer::F32 plane_size = 32.0f;
+  mScene.floorPlane.init(plane_size, plane_size, 8u);
 
   CHECKGLERROR();
 }
@@ -188,22 +190,9 @@ void Application::frame() {
 
   if (!bSSAO) {
     render_scene(*mCamera);
-    return;
+  } else {
+    render_deferred(*mCamera);
   }
-
-  //1) Render scene to the FBO
-  mBufferingPass.FBO.bind(GL_DRAW_FRAMEBUFFER);
-  render_scene(*mCamera);
-  mBufferingPass.FBO.unbind();
-
-  glDepthMask(GL_FALSE);
-  glDisable(GL_DEPTH_TEST);
-
-  // 2) Compute SSAO
-  mPass.hbao.process(&mAOTexturePtr, mCamera->frustum());
-
-  // 3) Render final texture to the screen
-  postprocess();
 
   aer::opengl::PushStates(states);
 
@@ -231,22 +220,41 @@ void Application::render_scene(const aer::Camera &camera) {
     mProgram.scene.set_uniform("uColor", aer::Vector3(0.42f, 0.4f, 0.35f));
     mScene.floorPlane.draw();
   mProgram.scene.deactivate();
+  glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
   CHECKGLERROR();
 }
 
 // -----------------------------------------------------------------------------
 
+void Application::render_deferred(const aer::Camera &camera) {
+    //1) Render scene to the FBO
+  mBufferingPass.FBO.bind(GL_DRAW_FRAMEBUFFER);
+  render_scene(*mCamera);
+  mBufferingPass.FBO.unbind();
+
+  glDepthMask(GL_FALSE);
+  glDisable(GL_DEPTH_TEST);
+
+  // 2) Compute SSAO
+  mPass.hbao.process(&mAOTexturePtr, mCamera->frustum());
+
+  // 3) Render final texture to the screen
+  postprocess();
+}
+
+// -----------------------------------------------------------------------------
+
 void Application::postprocess() {
   AER_ASSERT(mAOTexturePtr != nullptr);
-
+  
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
   aer::DefaultSampler::LinearClampled().bind(0);
   aer::DefaultSampler::LinearClampled().bind(1);
 
   mProgram.mapscreen.activate();
-    mAOTexturePtr->bind(0);    
+    mAOTexturePtr->bind(0);
     mProgram.mapscreen.set_uniform("uAOTex", 0);
 
     mBufferingPass.texRGBA.bind(1);

@@ -49,12 +49,12 @@ public:
   void init(const SKMFile &skmFile);
 
   /// @return a blend shape ID from its name
-  const U32 id_from_name(const std::string &name) {
+  U32 id_from_name(const std::string &name) {
     return mBSIndexMap[name];
   }
 
   /// @return the number of blend shape stored
-  const U32 count() const {
+  U32 count() const {
     return mCount;
   }
 

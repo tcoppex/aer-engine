@@ -192,24 +192,24 @@ class SKMFile {
 
   bool load(const char *filename);
 
-  const TPoint        *const points()          const { return points_; }
-  const TVertex       *const vertices()        const { return vertices_; }
-  const TFace         *const faces()           const { return faces_; }  
-  const TFaceMaterial *const face_materials()  const { return face_materials_; }
-  const TBoneWeight   *const bone_weights()    const { return bone_weights_; }  
-  const TSKeyInfo     *const skey_infos()      const { return skey_infos_; }
-  const TSKeyData     *const skey_datas()      const { return skey_datas_; }
+  const TPoint        * points()          const { return points_; }
+  const TVertex       * vertices()        const { return vertices_; }
+  const TFace         * faces()           const { return faces_; }
+  const TFaceMaterial * face_materials()  const { return face_materials_; }
+  const TBoneWeight   * bone_weights()    const { return bone_weights_; }
+  const TSKeyInfo     * skey_infos()      const { return skey_infos_; }
+  const TSKeyData     * skey_datas()      const { return skey_datas_; }
 
-  const U32 numpoints()        const { return numpoints_; }
-  const U32 numvertices()      const { return numvertices_; }
-  const U32 numfaces()         const { return numfaces_; }
-  const U32 numfacematerials() const { return numfacematerials_; }
-  const U32 numboneweights()   const { return numboneweights_; }
-  const U32 numskeyinfos()     const { return numskeyinfos_; }
-  const U32 numskeydatas()     const { return numskeydatas_; }
+  U32 numpoints()        const { return numpoints_; }
+  U32 numvertices()      const { return numvertices_; }
+  U32 numfaces()         const { return numfaces_; }
+  U32 numfacematerials() const { return numfacematerials_; }
+  U32 numboneweights()   const { return numboneweights_; }
+  U32 numskeyinfos()     const { return numskeyinfos_; }
+  U32 numskeydatas()     const { return numskeydatas_; }
 
   /// @return True if a skeleton file (.ska) is linked
-  const bool has_skeleton() const { return numskainfos_ != 0u; }
+  bool has_skeleton() const { return numskainfos_ != 0u; }
   
   /// @return the linked skeleton filename if any, nullptr otherwise
   const char* ska_name() const { 
@@ -293,13 +293,13 @@ class SKAFile {
 
   bool load(const char* filename);
 
-  const TBone       *const bones()     const { return bones_;     }
-  const TSequence   *const sequences() const { return sequences_; }
-  const TFrame      *const frames()    const { return frames_;    }
+  const TBone     * bones()     const { return bones_;     }
+  const TSequence * sequences() const { return sequences_; }
+  const TFrame    * frames()    const { return frames_;    }
 
-  const U32 numbones()     const { return numbones_;     }
-  const U32 numsequences() const { return numsequences_; }
-  const U32 numframes()    const { return numframes_;    }
+  U32 numbones()     const { return numbones_;     }
+  U32 numsequences() const { return numsequences_; }
+  U32 numframes()    const { return numframes_;    }
 
 
  private:
@@ -360,19 +360,19 @@ class MATFile {
     return filepath_.c_str();
   }
 
-  const char* material_name(const U32 id) const {
+  const char* material_name(U32 id) const {
     return material_datas_[id].name;
   }
 
   const char* material_from_name(const std::string& name,
                                  const MaterialType type) const;
 
-  const char* material_from_id(const U32 id,
+  const char* material_from_id(U32 id,
                                const MaterialType type) const {
     return material_datas_[id].mList[type];
   }
 
-  const U32 count() const {
+  U32 count() const {
     return material_datas_.size();
   }
 

@@ -63,13 +63,13 @@ void FreeCamera::update() {
     /// noise to add to yaw & pitch to bring a natural feeling to the camera
     F32 t = 0.05f*GlobalClock::Get().relative_time(aer::SECOND);
     F32 n1 = 0.025f*glm::simplex(glm::vec2(sin(3.0f*t), cos(5.0f*t)));
-    F32 n2 = 0.050f*glm::simplex(glm::vec2(sin(7.0f*t), cos(2.0f*t)));
+    F32 n2 = 0.030f*glm::simplex(glm::vec2(sin(7.0f*t), cos(2.0f*t)));
     n1 *= glm::smoothstep(0.0f, 1.0f, 1.0f-abs(n1));
     n2 *= glm::smoothstep(0.0f, 1.0f, 1.0f-abs(n2));
 
     yaw   += n1;
     pitch += n2;
-    roll  = 2.5f * n1 * n2;
+    roll  = 2.0f * n1 * n2;
   }
 
   // Compute the rotation matrix, ie. Ry(yaw) * Rx(pitch) * Rz(roll)
@@ -144,8 +144,6 @@ void FreeCamera::update_rotation() {
     return;
   }
 
-  F32 inertia = glm::dot(rotation_velocity_, rotation_velocity_);
-
   bool bHasRotated = false;
   Vector2 new_delta(0.0f);
 
@@ -169,6 +167,8 @@ void FreeCamera::update_rotation() {
     new_delta = event.mouse_delta();
   }
 
+
+  const F32 inertia = glm::dot(rotation_velocity_, rotation_velocity_);
 
   /// Update camera rotation
   if (bHasRotated || (inertia >= FLT_EPSILON)) {

@@ -22,6 +22,8 @@ namespace aer {
 */
 class BlendNode {
 public:
+  virtual ~BlendNode() = default;
+
   /// Compute final weight for each clips
   virtual void compute_weight(const F32 weight) = 0;
 };

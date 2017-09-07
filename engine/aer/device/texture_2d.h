@@ -53,6 +53,7 @@ class Texture2D : public Texture {
     bAllocated_(false)
   {}
 
+  virtual ~Texture2D() = default;
 
   /// Set the default texture unit then bind the texture and its sampler to it
   void bind(U32 unit);
@@ -66,7 +67,7 @@ class Texture2D : public Texture {
 
   ///  + + + + Binding aware methods  + + + +
   /// Allocate data for all levels of the 2D texture
-  void allocate(GLenum internalformat, U32 width, U32 height, U32 levels = 1u);
+  void allocate(GLenum internalformat, U32 width, U32 height, U32 levels = 1u, bool immutable=false); //
 
   void resize(aer::U32 width, aer::U32 height);
 

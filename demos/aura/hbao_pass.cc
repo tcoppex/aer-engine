@@ -71,14 +71,13 @@ void HBAOPass::process(aer::Texture2D **output_ao_texture_pptr,
     linearize_depth();
     launch_kernel_HBAO();
     launch_kernel_blurAO();
-    //compositing();
   mFBO.unbind();
 
   // deactivate any program let active
   aer::Program::Deactivate();
   aer::Sampler::UnbindAll(2u);
 
-  *output_ao_texture_pptr = &mTex.blurAOXY;
+  *output_ao_texture_pptr = &(mTex.blurAOXY);
 
   CHECKGLERROR();
 }
@@ -93,27 +92,27 @@ void HBAOPass::init_textures() {
   // - TEXTURES
   mTex.linDepth.generate();
   mTex.linDepth.bind();
-  mTex.linDepth.allocate(GL_R32F, width, height);
+  mTex.linDepth.allocate(GL_R32F, width, height, 1u, true);
 
   mTex.AOX.generate();
   mTex.AOX.bind();
-  mTex.AOX.allocate(GL_R32F, width, height);
+  mTex.AOX.allocate(GL_R32F, width, height, 1u, true);
 
   mTex.AOXY.generate();
   mTex.AOXY.bind();
-  mTex.AOXY.allocate(GL_RG16F, width, height);
+  mTex.AOXY.allocate(GL_RG16F, width, height, 1u, true);
 
   mTex.blurAOX.generate();
   mTex.blurAOX.bind();
-  mTex.blurAOX.allocate(GL_RG16F, width, height);
+  mTex.blurAOX.allocate(GL_RG16F, width, height, 1u, true);
 
   mTex.blurAOXY.generate();
   mTex.blurAOXY.bind();
-  mTex.blurAOXY.allocate(GL_R32F, width, height);
+  mTex.blurAOXY.allocate(GL_R32F, width, height, 1u, true);
 
   mTex.finalAO.generate();
   mTex.finalAO.bind();
-  mTex.finalAO.allocate(GL_R32F, width, height);
+  mTex.finalAO.allocate(GL_R32F, width, height, 1u, true);
 
   aer::Texture::Unbind(GL_TEXTURE_2D);
 
@@ -224,6 +223,7 @@ void HBAOPass::launch_kernel_HBAO() {
     aer::Vector2i gridDim;
 
     //--------
+    // First Pass : Blur on X
 
     // X-HBAO output
     mTex.AOX.bind_image(image_unit, GL_WRITE_ONLY);
@@ -234,10 +234,22 @@ void HBAOPass::launch_kernel_HBAO() {
     glUniformSubroutinesuiv(GL_COMPUTE_SHADER, 1, &ssaoX_id);
     gridDim.x = (width + kHBAOTileWidth) / kHBAOTileWidth;
     gridDim.y = height;
+
     glDispatchCompute(gridDim.x, gridDim.y, 1);
 
-    CHECKGLERROR();
-    //--------
+
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+    //-----------------------------
+    // Second Pass : Blur on Y
+
+    //--------------
+    // IT WAS THE CULPRIT ALL ALLOOOOONG
+    // moral of the story : always unbind your filthy Opengl objects !
+    //aer::Texture2D::UnbindAll(GL_TEXTURE_2D, image_unit);
+    //while (image_unit) aer::Texture2D::UnbindImage(image_unit--);
+    mTex.linDepth.unbind();
+    //--------------
 
     image_unit = 0;
 
@@ -255,7 +267,11 @@ void HBAOPass::launch_kernel_HBAO() {
     glUniformSubroutinesuiv(GL_COMPUTE_SHADER, 1, &ssaoY_id);
     gridDim.x = (height + kHBAOTileWidth) / kHBAOTileWidth;
     gridDim.y = width;
+    
     glDispatchCompute(gridDim.x, gridDim.y, 1);
+
+
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
   }
 
   CHECKGLERROR();
@@ -297,7 +313,9 @@ void HBAOPass::launch_kernel_blurAO() {
     const aer::U32 kRowTileWidth = kHBAOTileWidth;
     gridDim.x = (width + kRowTileWidth) / kRowTileWidth;
     gridDim.y = height;
+
     glDispatchCompute(gridDim.x, gridDim.y, 1);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT); //
   }
 
   CHECKGLERROR();
@@ -314,7 +332,7 @@ void HBAOPass::launch_kernel_blurAO() {
 
     // Input textures
     pgm.set_uniform("uTexAOLinDepthNearest", 0);
-    pgm.set_uniform("uTexAOLinDepthNearest", 1);
+    pgm.set_uniform("uTexAOLinDepthLinear", 1);
     mTex.blurAOX.bind(0);
     mTex.blurAOX.bind(1);
 
@@ -326,16 +344,12 @@ void HBAOPass::launch_kernel_blurAO() {
     const aer::U32 kRowTileHeight = kHBAOTileWidth;
     gridDim.x = (height + kRowTileHeight) / kRowTileHeight;
     gridDim.y = width;
+
     glDispatchCompute(gridDim.x, gridDim.y, 1);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT); //
   }
 
   CHECKGLERROR();
-}
-
-// -----------------------------------------------------------------------------
-
-void HBAOPass::compositing() {
-  //
 }
 
 // -----------------------------------------------------------------------------
@@ -347,11 +361,9 @@ void HBAOPass::update_parameters(const aer::Frustum &frustum) {
   const float zNear = frustum.znear();
   const float zFar  = frustum.zfar();
 
-  const aer::Vector2 &lParams = frustum.linearization_params(); //
-
   const float sceneScale      = std::min(zNear, zFar);
   const float degToRad        = M_PI / 180.0f;
-  const float fovyRad         = frustum.fov() * degToRad;
+  const float fovyRad         = frustum.fov();
   const float radius          = 0.015f;
   const float radiusScale     = std::max(radius, 1.e-8f);
   const float blurRadius      = 16.0f;
@@ -371,7 +383,7 @@ void HBAOPass::update_parameters(const aer::Frustum &frustum) {
   SETPARAM(InvAOResolution, GETPARAM(InvFullResolution));//
 
   const aer::Vector2 &aor = GETPARAM(AOResolution);
-  SETPARAM(FocalLen, 1.0f/tanf(fovyRad*0.5f) * aer::Vector2((aor.y/aor.x), 1.0f));
+  SETPARAM(FocalLen, 1.0f / tanf(fovyRad*0.5f) * aer::Vector2((aor.y/aor.x), 1.0f));
   SETPARAM(InvFocalLen, 1.0f / GETPARAM(FocalLen));
 
   SETPARAM(UVToViewA, GETPARAM(InvFocalLen)*aer::Vector2( 2.0f,-2.0f));
@@ -390,8 +402,8 @@ void HBAOPass::update_parameters(const aer::Frustum &frustum) {
   SETPARAM(BlurDepthThreshold, 2.0f * sqrtLn2 * (sceneScale / blurSharpness));
   SETPARAM(BlurFalloff, invLn2 / (2.0f*blurSigma*blurSigma));
 
-  SETPARAM(LinA, zNear);//SETPARAM(LinA, lParams.x);
-  SETPARAM(LinB, zFar);//SETPARAM(LinB, lParams.y);
+  SETPARAM(LinA, zNear);
+  SETPARAM(LinB, zFar);
 
 # undef GETPARAM
 # undef SETPARAM 

@@ -38,7 +38,7 @@ void Application::init() {
   aer::Display_t display(kDefaultRes, kDefaultRes);
   create_window(display, "CUDA / OpenGL Compute Shader blur benchmark");
 
-  //window()->setVerticalSync(true);
+  //window().set_verticalsync(true);
   set_fps_control(true);
   set_fps_limit(60u);
 
@@ -48,12 +48,12 @@ void Application::init() {
                  aer::Vector3(0.0f, 0.0f, 0.0f),
                  aer::Vector3(0.0f, 1.0f, 0.0f));
 
-  aer::Frustum frustum(60.0f, 1.0f, 0.1f, 1000.0f);
+  aer::Frustum frustum(glm::radians(60.0f), 1.0f, 0.1f, 1000.0f);
 
   mCamera = new aer::FreeCamera(view, frustum);
   mCamera->set_motion_factor(0.20f);
   mCamera->set_rotation_factor(0.15f);
-  mCamera->enable_motion_noise(false);
+  mCamera->enable_motion_noise(true);
 
   /// OpenGL settings
   glClearColor(0.5f, 0.15f, 0.15f, 1.0f);
@@ -87,6 +87,12 @@ void Application::init_textures() {
   mInterop.texDST.bind();
   mInterop.texDST.allocate(GL_RGBA8, kDefaultRes, kDefaultRes);
 
+  /// !! WARNING !!
+  /// In ComputeShaders, image object must use an Immutable storage, specified with
+  /// TexStorage2D
+  /// ('texDST.allocate' is kept here because it sets parameters internally)
+  glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, kDefaultRes, kDefaultRes);
+
 #ifdef USE_CUDA
   // Register the texture by CUDA to be later bound as a read-only CUDA texture
   CHECK_CUDA(
@@ -118,6 +124,17 @@ void Application::init_textures() {
   CHECKGLERROR();
 }
 
+void CheckProgramStatus(GLuint program) {
+  GLint status = 0;
+
+  glGetProgramiv(program, GL_LINK_STATUS, &status);
+  if (status != GL_TRUE) {
+    char buffer[1024];
+    glGetProgramInfoLog(program, 1024, 0, buffer);
+    fprintf(stderr, "%s\n", buffer);
+  }
+}
+
 void Application::init_shaders() {
   aer::ShaderProxy &sp = aer::ShaderProxy::Get();
   sp.set_shader_path(DATA_DIRECTORY "shaders/");
@@ -141,6 +158,7 @@ void Application::init_shaders() {
 
   // Compute Shader kernel to blur input image
   AER_CHECK(mProgram.compute.create(sp.get("PostProcess.CS")));
+  CheckProgramStatus(mProgram.compute.id());
 
   // Map a texture to the screen
   mProgram.mapscreen.create();
@@ -169,7 +187,7 @@ void Application::frame() {
   }
 
   if (ev.key_down(aer::Keyboard::T)) {
-    mbDisplayStats = !mbDisplayStats;
+    mbDisplayStats ^= true;
   }
   
   bool bKernelRadiusUpdated = false;

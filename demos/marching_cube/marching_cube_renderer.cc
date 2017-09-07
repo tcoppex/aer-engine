@@ -226,14 +226,14 @@ void MarchingCubeRenderer::init_buffers() {
   bytesize = 2u * kChunkDim * kChunkDim * sizeof(aer::F32);
   trilist_base_buffer_.allocate(bytesize, GL_STATIC_DRAW);
 
-  aer::F32 *d_indices = nullptr;
+  aer::F32 *d_indices(nullptr);
   trilist_base_buffer_.map(&d_indices, GL_WRITE_ONLY);
   {
     aer::U32 index = 0u;
-    for (aer::I32 j = 0; j < kChunkDim; ++j) {
-      for (aer::I32 i = 0; i < kChunkDim; ++i) {
-        d_indices[index++] = i;
-        d_indices[index++] = j;
+    for (aer::U32 j = 0u; j < kChunkDim; ++j) {
+      for (aer::U32 i = 0u; i < kChunkDim; ++i) {
+        d_indices[index++] = static_cast<aer::F32>(i);
+        d_indices[index++] = static_cast<aer::F32>(j);
       }
     }
   }

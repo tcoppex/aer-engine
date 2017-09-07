@@ -143,6 +143,7 @@ invariant out float te_colorFactor;
 //-----------------
 /// FUNCTIONS
 //-----------------
+vec4 sample_triangle(in vec4 p0, in vec4 p1, in vec4 p2, vec2 r);
 vec4 hermit_mix(in vec3 p0, in vec3 p1, in vec3 t0, in vec3 t1, in float u);
 
 void main() {
@@ -167,26 +168,44 @@ void main() {
   const float texelSize = 1.0f / (textureSize(uTexRandom, 0).x - 1.0f);
   float texcoord = uv.y + tc_instanceID * texelSize;
 
-  /// Retrieve random coordinates
-  vec3 rand_coords = texture(uTexRandom, texcoord).rgb;
-
-  /// Calculate the final lerped position
-  vec4 lerped_pos = rand_coords.x*p0 + rand_coords.y*p1 + rand_coords.z*p2;
+  /// Calculate the final lerped position.
+#if 1
+  // via random point sampling.
+  vec2 rand_coords = texture(uTexRandom, texcoord).rg;
+  vec4 lerped_pos = sample_triangle(p0, p1, p2, rand_coords);
+#else 
+  // via barycentric coordinates. 
+  vec3 rand_coords = normalize(texture(uTexRandom, texcoord).rgb);
+  vec4 lerped_pos = mat3x4(p0, p1, p2) * rand_coords;
+#endif
 
   /// Set OUTPUTS
   gl_Position    = uMVP * lerped_pos;
   te_colorFactor = float(tc_instanceID + 1.0f) / float(uNumInstances);
 }
 
-
-const mat4 mHermit = mat4(
-  vec4( 2.0f, -3.0f, 0.0f, 1.0f),
-  vec4(-2.0f,  3.0f, 0.0f, 0.0f),
-  vec4( 1.0f, -2.0f, 1.0f, 0.0f),
-  vec4( 1.0f, -1.0f, 0.0f, 0.0f)
-);
+vec4 sample_triangle(in vec4 p0, in vec4 p1, in vec4 p2, vec2 st) {
+/* 
+Generating Random Points in Triangles
+by Greg Turk
+from "Graphics Gems", Academic Press, 1990
+*/
+  st.y = sqrt(st.y);
+  vec3 coords;
+  coords.x = 1.0f - st.y;
+  coords.y = (1.0f - st.x) * st.y;
+  coords.z = st.x * st.y;
+  return mat3x4(p0, p1, p2) * coords;
+}
 
 vec4 hermit_mix(in vec3 p0, in vec3 p1, in vec3 t0, in vec3 t1, in float u) {
+  const mat4 mHermit = mat4(
+    vec4( 2.0f, -3.0f, 0.0f, 1.0f),
+    vec4(-2.0f,  3.0f, 0.0f, 0.0f),
+    vec4( 1.0f, -2.0f, 1.0f, 0.0f),
+    vec4( 1.0f, -1.0f, 0.0f, 0.0f)
+  );
+
   vec4 vU = vec4(u*u*u, u*u, u, 1.0f);
 
   mat4 B = mat4( 
@@ -198,7 +217,6 @@ vec4 hermit_mix(in vec3 p0, in vec3 p1, in vec3 t0, in vec3 t1, in float u) {
 
   return vU * mHermit * B;
 }
-
 
 --
 

@@ -13,7 +13,8 @@ namespace aer {
 
 /// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + 
 /// 
-/// Represents projectives parameters
+/// Represents projectives parameters.
+/// Angles are in radians.
 /// 
 /// + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + ~ + 
 class Frustum {

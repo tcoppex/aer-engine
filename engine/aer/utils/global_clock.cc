@@ -25,8 +25,8 @@ GlobalClock::GlobalClock()
     fps_(-1),
     framecount_(0u),
     framecount_total_(0u),
-    bPaused_(true),
-    default_unit_(MILLISECOND)
+    default_unit_(MILLISECOND),
+    bPaused_(true)
 {
   converse_table_[NANOSECOND]   = 1.0e-9;
   converse_table_[MICROSECOND]  = 1.0e-6;
@@ -34,7 +34,7 @@ GlobalClock::GlobalClock()
   converse_table_[SECOND]       = 1.0;
   converse_table_[DEFAULT]      = converse_table_[default_unit_];
 
-  // initialized the clock
+  // initialize the clock
   start_time_ = absolute_time();
 
   resume();
@@ -80,15 +80,15 @@ bool GlobalClock::is_same_unit(TimeUnit src, TimeUnit dst) const {
 }
 
 F64 GlobalClock::convert_time(TimeUnit src_unit, TimeUnit dst_unit, const F64 time) const {
-  F64 scale = (is_same_unit(src_unit, dst_unit)) ? 1.0 : 
-              converse_table_[src_unit] / converse_table_[dst_unit];
+  const F64 scale = (is_same_unit(src_unit, dst_unit)) ? 1.0 : 
+                                                         converse_table_[src_unit] / converse_table_[dst_unit];
   return scale * time;
 }
 
 F64 GlobalClock::absolute_time(TimeUnit unit) const {
   F64 global_time = 0.0;
     
-# ifdef AER_WINDOWS
+#ifdef AER_WINDOWS
 
   LARGE_INTEGER ticksPerSecond;
   LARGE_INTEGER t;
@@ -98,13 +98,13 @@ F64 GlobalClock::absolute_time(TimeUnit unit) const {
 
   global_time = (t.QuadPart / ticksPerSecond.QuadPart) * 1000.0;
 
-# else // AER_UNIX && AER_MACOS
+#else // AER_UNIX && AER_MACOS
 
   timeval t;
   gettimeofday(&t, NULL);
   global_time = t.tv_sec * 1000.0 + t.tv_usec * 0.001;
 
-# endif
+#endif
 
   return convert_time(MILLISECOND, unit, global_time);
 }

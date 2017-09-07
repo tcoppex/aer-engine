@@ -12,8 +12,8 @@
 -- NoMSAA.FS
 
 uniform sampler2D uDepthTex;
-uniform  float uLinA;//
-uniform  float uLinB;//
+uniform  float uLinA; //
+uniform  float uLinB; //
 
 in VDataBlock {
   vec2 texCoord;
@@ -25,13 +25,9 @@ void main()
 {
   float z = texture( uDepthTex, IN.texCoord).r;
 
-  float linearDepth;
-  //linearDepth = uLinB / (z - uLinA);
-  //linearDepth = 1.0f / (z*uLinA + uLinB);
-
-  float n = uLinA; //
-  float f = uLinB; //
-  linearDepth = (2 * n) / (f + n - z * (f - n));
+  const float n = uLinA;
+  const float f = uLinB;
+  float linearDepth = (2 * n) / (f + n - z * (f - n));
 
   fragDepth = linearDepth;
 }

@@ -160,7 +160,8 @@ void SkeletonController::blend_poses(U32 active_count) {
 
   /// 1) Calculate the total weight for normalization
   F32 sum_weights = 0.0f;
-# pragma omp parallel for reduction(+:sum_weights) schedule(static) num_threads(4)
+//can't use omp here
+//# pragma omp parallel for reduction(+:sum_weights) schedule(static) num_threads(4)
   for (const auto &sc : mSequence) {
     if (sc.bEnable) {
       sum_weights += sc.weight;

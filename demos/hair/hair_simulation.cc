@@ -54,8 +54,7 @@ void HairSimulation::update() {
 
 void HairSimulation::render(const aer::Camera &camera) {
   const aer::Matrix4x4 &mvp = camera.view_projection_matrix();
-  
-  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
   // Render the scalp & hair's control points
   {
     aer::Program &pgm = render_scalp_pgm_;
@@ -63,18 +62,17 @@ void HairSimulation::render(const aer::Camera &camera) {
     pgm.activate();
       pgm.set_uniform("uMVP", mvp);
       pgm.set_uniform("uColor", aer::Vector3(0.0f, 1.0f, 0.0f));
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
       scalp_.draw();
+      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
       glPointSize(4.0f);
       pgm.set_uniform("uColor", aer::Vector3(1.0f, 0.5f, 0.0f));
       control_hair_patch_.set_primitive_mode(GL_POINTS);
       control_hair_patch_.draw();
-
-
     pgm.deactivate();
   }
 
-  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   // Render hair with tesselation & interpolation
   {
     aer::Program &pgm = render_hair_pgm_;
@@ -82,9 +80,10 @@ void HairSimulation::render(const aer::Camera &camera) {
     pgm.activate();
       pgm.set_uniform("uMVP", mvp);
 
+
       // tesselation params
-      pgm.set_uniform("uNumLines",           aer::I32(numlines_));
-      pgm.set_uniform("uNumLinesSubSegment", aer::I32(numlines_subsegment_));
+      pgm.set_uniform("uNumLines",           numlines_);
+      pgm.set_uniform("uNumLinesSubSegment", numlines_subsegment_);
 
       glBindTexture(GL_TEXTURE_1D, randtex_id_);
       pgm.set_uniform("uTexRandom", 0);
@@ -170,7 +169,6 @@ void HairSimulation::init_geometry() {
   aer::DeviceBuffer &ibo = mesh.ibo();
   ibo.bind(GL_ELEMENT_ARRAY_BUFFER);
   {
-
     const aer::UPTR elements_bytesize = nelems * sizeof(aer::U32);
     ibo.allocate(elements_bytesize, GL_STATIC_READ);
     ibo.upload(0u, elements_bytesize, (aer::U32*)(*g_scalp_faces));  
@@ -185,35 +183,24 @@ void HairSimulation::init_geometry() {
 void HairSimulation::init_textures() {
   /// Setup the random lookup texture
 
-  const aer::U32 texsize = 512u;
-  aer::U8 *data = new aer::U8[3*texsize];
+  const aer::U32 texsize = 1024u;
+  aer::F32 *data = new aer::F32[3u*texsize];
 
-  srand(time(NULL));
+  //srand(time(NULL));
+  const aer::F32 inv_randmax = 1.0f / static_cast<aer::F32>(RAND_MAX);
+  
+  aer::U32 index = 0u;
   for (aer::U32 i = 0u; i < texsize; ++i) {
-    aer::F32 x = rand() / static_cast<aer::F32>(RAND_MAX);
-    aer::F32 y = rand() / static_cast<aer::F32>(RAND_MAX);
-    aer::F32 z = rand() / static_cast<aer::F32>(RAND_MAX);
-    aer::F32 n = x+y+z;
-
-    if (n==0.0f) {
-      n = 1.0f;
-      x = y = z = 1.0f / 3.f;
-    }
-
-    x /= n;
-    y /= n;
-    z /= n;
-    data[3*i+0] = static_cast<aer::U8>(255 * x);
-    data[3*i+1] = static_cast<aer::U8>(255 * y);
-    data[3*i+2] = static_cast<aer::U8>(255 * z);
+    data[index++] = rand() * inv_randmax;
+    data[index++] = rand() * inv_randmax;
+    data[index++] = rand() * inv_randmax;
   }
-
 
   glGenTextures(1, &randtex_id_);
   glBindTexture(GL_TEXTURE_1D, randtex_id_);
   glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB8, texsize, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+  glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB32F, texsize, 0, GL_RGB, GL_FLOAT, data);
   glBindTexture(GL_TEXTURE_1D, 0u);
 
   delete [] data;
@@ -251,8 +238,8 @@ void HairSimulation::init_shaders() {
 //------------------------------------------------------------------------------
 
 void HairSimulation::init_psystem() {
-  aer::U32 kNumControlPoints = kNumControlSegment + 1u;
-  aer::U32 npoints = kScalpNumVertex * kNumControlPoints;
+  const aer::U32 kNumControlPoints = kNumControlSegment + 1u;
+  const aer::U32 npoints = kScalpNumVertex * kNumControlPoints;
 
   tangents_buffer_.resize(npoints);
 
@@ -262,8 +249,7 @@ void HairSimulation::init_psystem() {
 
   // --------- Particles --------
 
-  const float segment_offset_factor = 1.75f;
-# define SEGMENT_OFFSET(x)  (pow(x,segment_offset_factor))
+# define SEGMENT_OFFSET(x)  (powf(x, 1.75f))
   const float max_length = 55.0f;
   const float max_offset = SEGMENT_OFFSET(kNumControlPoints-1u);
   const float scale_offset = max_length / max_offset;
@@ -272,8 +258,8 @@ void HairSimulation::init_psystem() {
   for (aer::U32 j = 0u; j < kScalpNumVertex; ++j) {
     aer::F32 *p_scalp = &g_scalp_verts[6u*j];
 
-    aer::Vector3   base(p_scalp[0], p_scalp[1], p_scalp[2]);
-    aer::Vector3 normal(p_scalp[3], p_scalp[4], p_scalp[5]);
+    const aer::Vector3   base(p_scalp[0], p_scalp[1], p_scalp[2]);
+    const aer::Vector3 normal(p_scalp[3], p_scalp[4], p_scalp[5]);
 
     for (aer::U32 i = 0u; i < kNumControlPoints; ++i) {
       aer::U32 idx = j*kNumControlPoints + i;
@@ -456,30 +442,37 @@ void HairSimulation::init_devicebuffers() {
 //------------------------------------------------------------------------------
 
 void HairSimulation::events() {
-  /// Events
   const aer::EventsHandler &ev = aer::EventsHandler::Get();
   aer::F32 speed;
 
+  // Tessellation Params 1 : number of lines.
   speed = 0.5f;
   if (ev.key_down(aer::Keyboard::Left)) {
-    numlines_ = (numlines_ > 1.0f) ? numlines_ - speed : 1.0f;
+    numlines_tracking_ -= speed;
   }
   if (ev.key_down(aer::Keyboard::Right)) {
-    numlines_ = (numlines_ < 32.0f) ? numlines_ + speed : 32.0f; 
+    numlines_tracking_ += speed; 
   }
+  numlines_tracking_ = glm::clamp(numlines_tracking_, 1.0f, 32.0f);
+  numlines_ = static_cast<aer::I32>(numlines_tracking_);
 
+  // Tessellation Params 2 : number of line's subsegments.
   speed = 0.25f;
   if (ev.key_down(aer::Keyboard::Down)) {
-    numlines_subsegment_ = (numlines_subsegment_ > 1.0f) ? numlines_subsegment_ - speed : 1.0f;
+    numlines_subsegment_tracking_ -= speed;
   }
   if (ev.key_down(aer::Keyboard::Up)) {
-    numlines_subsegment_ = (numlines_subsegment_ < 32.0f) ? numlines_subsegment_ + speed : 32.0f;
+    numlines_subsegment_tracking_ += speed;
   }
+  numlines_subsegment_tracking_ = glm::clamp(numlines_subsegment_tracking_, 1.0f, 32.0f);
+  numlines_subsegment_ = static_cast<aer::I32>(numlines_subsegment_tracking_);
 
+  // Toggle curly hair.
   if (ev.key_pressed(aer::Keyboard::C)) {
     bCurlHair_ = !bCurlHair_;
   }
   
+  // Toggle simulation.
   if (ev.key_pressed(aer::Keyboard::Space)) {
     bPauseSimulation_ = !bPauseSimulation_;
   }
@@ -519,7 +512,7 @@ void HairSimulation::update_tangents() {
               di *= 10.0f;
         
         aer::Vector2 v(sin(3.0f*dj), cos(5.0f*di));
-        aer::F32 n = di*glm::simplex(aer::Vector2(v));
+        aer::F32 n = di * glm::simplex(aer::Vector2(v));
         curly = -7.0f*aer::Vector3(1.7f*cos(n*M_PI), -0.3f*n, 2.5f*sin(n*M_PI));
       }
 

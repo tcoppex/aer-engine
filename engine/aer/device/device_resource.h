@@ -27,7 +27,7 @@ class DeviceResource
   virtual void generate() = 0;
   virtual void release()  = 0;
 
-  inline const U32 id() const { return id_; }
+  inline U32 id() const { return id_; }
   inline bool is_generated() const { return 0u != id_; }
 
  protected:

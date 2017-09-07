@@ -45,7 +45,7 @@ private:
   //void downsample_depth();
   void launch_kernel_HBAO();
   void launch_kernel_blurAO();
-  void compositing(); //
+  //void compositing(); //
 
   void update_parameters(const aer::Frustum &frustum);
 

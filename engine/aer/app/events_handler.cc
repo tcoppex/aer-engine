@@ -280,7 +280,7 @@ void EventsHandler::handle_joystick_motion() {
   }
 
   int axis = event_.joystickMove.axis;  
-  if (axis >= 4u) {
+  if (axis >= 4) {
     return;
   }
 

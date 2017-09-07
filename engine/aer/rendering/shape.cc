@@ -61,37 +61,38 @@ void Plane::init(const F32 width, const F32 height, const U32 resolution) {
 
 
   mesh_.init(1u, true);
-
-  mesh_.begin_update();
   
-  DeviceBuffer &vbo = mesh_.vbo();
-  vbo.bind(GL_ARRAY_BUFFER);
+  mesh_.begin_update();
   {
-    U32 buffersize = vertices.size() * sizeof(vertices[0]) +
-                      normals.size() * sizeof(normals[0]);
-    vbo.allocate(buffersize, GL_STATIC_READ);
+    DeviceBuffer &vbo = mesh_.vbo();
+    vbo.bind(GL_ARRAY_BUFFER);
+    {
+      U32 buffersize = vertices.size() * sizeof(vertices[0]) +
+                        normals.size() * sizeof(normals[0]);
+      vbo.allocate(buffersize, GL_STATIC_READ);
 
-    IPTR offset = 0;
-    glBindVertexBuffer(0, vbo.id(), 0, sizeof(vertices[0]));
-    glVertexAttribFormat(POSITION, 3, GL_FLOAT, GL_FALSE, 0);
-    glVertexAttribBinding(POSITION, 0);
-    glEnableVertexAttribArray(POSITION);
-    offset = vbo.upload(0, vertices.size() * sizeof(vertices[0]), vertices.data());
+      IPTR offset = 0;
+      glBindVertexBuffer(0, vbo.id(), 0, sizeof(vertices[0]));
+      glVertexAttribFormat(POSITION, 3, GL_FLOAT, GL_FALSE, 0);
+      glVertexAttribBinding(POSITION, 0);
+      glEnableVertexAttribArray(POSITION);
+      offset = vbo.upload(0, vertices.size() * sizeof(vertices[0]), vertices.data());
 
-    glBindVertexBuffer(1, vbo.id(), offset, sizeof(normals[0]));
-    glVertexAttribFormat(NORMAL, 3, GL_FLOAT, GL_FALSE, 0);
-    glVertexAttribBinding(NORMAL, 1);
-    glEnableVertexAttribArray(NORMAL);
-    vbo.upload(offset, normals.size() * sizeof(normals[0]), normals.data());
-  }
-  vbo.unbind();
+      glBindVertexBuffer(1, vbo.id(), offset, sizeof(normals[0]));
+      glVertexAttribFormat(NORMAL, 3, GL_FLOAT, GL_FALSE, 0);
+      glVertexAttribBinding(NORMAL, 1);
+      glEnableVertexAttribArray(NORMAL);
+      vbo.upload(offset, normals.size() * sizeof(normals[0]), normals.data());
+    }
+    vbo.unbind();
 
-  /// Setup index datas
-  DeviceBuffer &ibo = mesh_.ibo();
-  ibo.bind(GL_ELEMENT_ARRAY_BUFFER);
-  {
-    ibo.allocate(nIndices*sizeof(indices[0]), GL_STATIC_READ);
-    ibo.upload(0u, nIndices*sizeof(indices[0]), indices.data());
+    /// Setup index datas
+    DeviceBuffer &ibo = mesh_.ibo();
+    ibo.bind(GL_ELEMENT_ARRAY_BUFFER);
+    {
+      ibo.allocate(nIndices*sizeof(indices[0]), GL_STATIC_READ);
+      ibo.upload(0u, nIndices*sizeof(indices[0]), indices.data());
+    }
   }
   mesh_.end_update();
 
@@ -147,7 +148,7 @@ void Cube::init(const F32 length) {
     20, 21, 22, 20, 22, 23
   };
   
-  const U32 nVertices = AER_ARRAYSIZE(vertices) / 3;
+  //const U32 nVertices = AER_ARRAYSIZE(vertices) / 3;
   const U32 nIndices  = AER_ARRAYSIZE(indices);
   
   mesh_.init(1u, true);
@@ -174,7 +175,7 @@ void Cube::init(const F32 length) {
       glVertexAttribFormat(TEXCOORD, 2, GL_FLOAT, GL_FALSE, 0);
       offset = vbo.upload(offset, sizeof(texCoords), texCoords);
 
-#     pragma unroll
+      // TODO : unroll
       for (U32 i=0u; i<3u; ++i) {
         glVertexAttribBinding(i, i);
         glEnableVertexAttribArray(i);
@@ -318,7 +319,7 @@ void Dome::init(const F32 radius, const U32 resolution) {
 
   // Create a sphere from bottom to top (like a spiral) as a tristrip
   I32 id = 0;
-  for (I32 j = resolution/2; j < resolution; ++j) {
+  for (I32 j = resolution/2; j < static_cast<I32>(resolution); ++j) {
     ct = ct2;
     st = st2;
     
@@ -333,7 +334,7 @@ void Dome::init(const F32 radius, const U32 resolution) {
     texCoords[2*id + 1] = 0.0f;
     ++id;
 
-    for (I32 i = 0; i < resolution+1; ++i) {
+    for (I32 i = 0; i < static_cast<I32>(resolution)+1; ++i) {
       phi = TwoPi * i * Delta;
       cp = glm::cos(phi);
       sp = glm::sin(phi);

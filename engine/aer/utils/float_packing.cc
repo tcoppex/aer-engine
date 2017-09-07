@@ -8,8 +8,7 @@
 
 namespace aer {
 
-U32 PackUnitFloat(F32 fvalue, U32 nBits)
-{
+U32 PackUnitFloat(F32 fvalue, U32 nBits) {
   AER_CHECK((fvalue >= 0.0f) && (fvalue <= 1.0f));
 
   U32 boundValue = 1u << nBits;
@@ -21,8 +20,7 @@ U32 PackUnitFloat(F32 fvalue, U32 nBits)
   return rounded;
 }
 
-F32 UnpackUnitFloat(U32 uvalue, U32 nBits)
-{
+F32 UnpackUnitFloat(U32 uvalue, U32 nBits) {
   U32 boundValue = 1u << nBits;
   F32 rescale = 1.0f / static_cast<F32>(boundValue - 1u);
 

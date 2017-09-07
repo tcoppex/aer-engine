@@ -70,8 +70,8 @@ class MarchingCubeRenderer {
 
 
   MarchingCubeRenderer() :
-    grid_dim_(0u),
     nfreebuffers_(0u),
+    grid_dim_(aer::Vector3(0u)),
     bInitialized_(false)
   {}
 

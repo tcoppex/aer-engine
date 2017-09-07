@@ -28,6 +28,8 @@ enum IKType_t {
 class IKNode {
  public:
   IKNode(IKType_t type, IKNode *parent, U32 type_id);
+  virtual ~IKNode() = default;
+
 
   /// Update the node's world-space coordinates
   void update();

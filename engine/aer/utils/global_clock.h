@@ -89,6 +89,8 @@ class GlobalClock : public Singleton<GlobalClock>
  private:
   bool is_same_unit(TimeUnit src, TimeUnit dst) const;
 
+  F64 converse_table_[kNumTimeUnit];
+
   F64 start_time_;              //  global time at the beginning of the clock
   F64 delta_time_;              //  duration of last frame
   F64 frame_time_;              //  relative time at the beginning of the frame
@@ -102,11 +104,9 @@ class GlobalClock : public Singleton<GlobalClock>
   U32 framecount_;              //  current second frame count
   U32 framecount_total_;        //  total frame elapsed from the start
 
-  bool bPaused_;                //  when true, do not update application time
-
   TimeUnit default_unit_;       //  default unit used to retrieve time
-  F64 converse_table_[kNumTimeUnit];
 
+  bool bPaused_;                //  when true, do not update application time
 
   friend class Singleton<GlobalClock>;
 };

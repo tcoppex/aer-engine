@@ -27,6 +27,8 @@ public:
   /// Return a shader bitfield from a shader type
   static GLbitfield TypeToBitfield(GLenum type);
 
+  virtual ~ShaderView() = default;
+
   /// Decrement the reference counter of the shader
   /// in the ShaderManager
   virtual void release() = 0;

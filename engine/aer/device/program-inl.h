@@ -77,7 +77,7 @@ bool Program::link() {
 
 bool Program::link(bool bSeparate) {
   set_separable(bSeparate);
-  link();
+  return link();
 }
 
 // -----------------------------------------------------------------------------

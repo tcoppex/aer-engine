@@ -140,7 +140,7 @@ void main()
 
 
   /* ------- */ barrier(); /* ------- */
-  //memoryBarrierShared(); // some glitch appears with radius = 1
+  memoryBarrierShared(); // some glitch appears with radius = 1
 
   const int r2 = r*r;
   vec3 sum = vec3(0.0f);

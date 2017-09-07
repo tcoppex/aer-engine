@@ -28,11 +28,11 @@ class Skeleton {
   // TODO : externalize setup from skaFile
   void init(const SKAFile& skaFile);
 
-  const U32 numjoints() const {
+  U32 numjoints() const {
     return mJoint.parent_ids.size();
   }
 
-  const U32 numclips() const {
+  U32 numclips() const {
     return mClips.size();
   }
 

@@ -1,6 +1,10 @@
 // -----------------------------------------------------------------------------
 // CreativeCommons BY-SA 3.0 2014 <Thibault Coppex>
 //
+// 2016 notes:
+// * forward_list and updates on Nodes are bad design,
+//   prefers vectors and a UpdateFunctor applied on each elements
+//   which should scale better on a data-centric design.
 //
 // -----------------------------------------------------------------------------
 

@@ -6,7 +6,7 @@
 #ifndef AER_CORE_ALGEBRA_TYPES_H_
 #define AER_CORE_ALGEBRA_TYPES_H_
 
-#define GLM_SWIZZLE
+#define GLM_FORCE_SWIZZLE
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
 #include "glm/gtx/dual_quaternion.hpp"

@@ -44,8 +44,10 @@ bool LayeredASM::access(const U32 layer_id, const std::string &tname) {
 
 void LayeredASM::evaluate(Sequence_t &sequence) {
   F32 totalWeight = 1.0f;
-  
-  for (U32 layer_id = mLayers.size()-1u; layer_id >= 0u; --layer_id) {
+
+  const U32 N = mLayers.size();
+  for (U32 i = 0u; i < N; ++i) {
+    const U32 layer_id = N-(i+1u);
     Layer &layer = mLayers[layer_id];
    
     BlendTree &tree = layer_state(layer_id).blend_tree();

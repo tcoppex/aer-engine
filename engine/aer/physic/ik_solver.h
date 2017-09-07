@@ -10,7 +10,7 @@
 #include <array>
 
 // linear algebra library
-#include "armadillo"
+#include <armadillo>
 
 #include "aer/common.h"
 #include "aer/physic/ik_chain.h"

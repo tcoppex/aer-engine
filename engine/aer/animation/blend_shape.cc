@@ -129,7 +129,6 @@ void BlendShape::init(const SKMFile &skmFile) {
       U32 target_id = i + 1u;
       pointIDToTargetID[pointBS_id] = target_id;
 
-      const SKMFile::TVector &v = skData.coordRel;
       d_datas[target_id] = skData.coordRel;
     }
   }

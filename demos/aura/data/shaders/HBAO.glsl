@@ -150,7 +150,7 @@ vec2 fetchXZ(int x, int y)
 {
   vec2 uv = (vec2(x, y) + 0.5f) * uInvAOResolution;
   float z_eye = texture(uTexLinDepth, uv).r;
-  float x_eye = (uUVToViewA * uv.x + uUVToViewB) * z_eye;
+  float x_eye = (uUVToViewA * uv + uUVToViewB).x * z_eye;
   return vec2(x_eye, z_eye);
 }
 
@@ -161,7 +161,7 @@ vec2 fetchYZ(int x, int y)
 {
   vec2 uv = (vec2(x, y) + 0.5f) * uInvAOResolution;
   float z_eye = texture(uTexLinDepth, uv).r;
-  float y_eye = (uUVToViewA * uv.y + uUVToViewB) * z_eye;
+  float y_eye = (uUVToViewA * uv + uUVToViewB).y * z_eye;
   return vec2(y_eye, z_eye);
 }
 
@@ -232,7 +232,7 @@ void HBAO_Y(ivec3 threadIdx, ivec3 blockIdx)
   SMEM(threadIdx.x) = fetchYZ(x, y);
   SMEM(min(2*KERNEL_RADIUS+threadIdx.x, SMEM_SIZE-1)) = fetchYZ(x, 2*KERNEL_RADIUS+y);
 
-  /*-------*/ barrier(); /*------------*/ // memoryBarrier();
+  /*-------*/ /*barrier(); /*------------*/ memoryBarrier();
 
   const ivec2 threadPos = ivec2(blockIdx.y, tileStart + threadIdx.x);
   const int tileEndClamped = min(tileEnd, int(uAOResolution.y));

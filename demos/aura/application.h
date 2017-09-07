@@ -31,6 +31,7 @@ class Application : public aer::Application {
 
   void frame() override;
   void render_scene(const aer::Camera &camera);
+  void render_deferred(const aer::Camera &camera);
   void postprocess();
 
   void help();

@@ -1,6 +1,8 @@
 aer-engine
 ================
 
+![](./screenshots/aura.png)
+
 About
 ---------------------------------
 
@@ -9,6 +11,7 @@ An OpenGL 4.3 / C++ 11 rendering engine oriented towards animation.
 
 Demos
 ---------------------------------
+
 <table>
     <tr>
         <td>aura</td>
@@ -54,6 +57,7 @@ make -j4
 ```
 
 Engine dependencies :
+
 <table>
     <tr>
         <td>SFML 2.1</td>
@@ -68,12 +72,12 @@ Engine dependencies :
         <td>Linear algebra library.</td>
     </tr>
     <tr>
-        <td>GLM 0.9.5</td>
+        <td>GLM 0.9.6+</td>
         <td>OpenGL Mathematics library.</td>
     </tr>
     <tr>
-        <td>GLEW 0.9.0</td>
-        <td>OpenGL wrangler (provided).</td>
+        <td>GLEW 0.9.0+</td>
+        <td>OpenGL wrangler.</td>
     </tr>
     <tr>
         <td>GLSW</td>

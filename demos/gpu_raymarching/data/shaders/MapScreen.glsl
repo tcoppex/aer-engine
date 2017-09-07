@@ -134,7 +134,7 @@ vec3 scene_normal(vec3 pos) {
   n.x = scene(pos + eps.xyy, dummy_m) - d;
   n.y = scene(pos + eps.yxy, dummy_m) - d;
   n.z = scene(pos + eps.yyx, dummy_m) - d;
-  return normalize(n );
+  return normalize(n);
 }
 
 vec3 trace(vec3 ro, vec3 rd, out float m, out bool hit) {

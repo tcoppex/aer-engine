@@ -46,8 +46,8 @@ const uchar*  GetRenderer();
 const uchar*  GetVersion();
 const uchar*  GetGLSLVersion();
 
-const I32     GetMinorVersion();
-const I32     GetMajorVersion();
+I32 GetMinorVersion();
+I32 GetMajorVersion();
 
 // http://developer.download.nvidia.com/opengl/specs/GL_NVX_gpu_memory_info.txt
 #ifndef GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX
@@ -57,19 +57,19 @@ const I32     GetMajorVersion();
 # define GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX  0x9049
 #endif
 
-const I32 GetAvailableMemory();
-const I32 GetCurrentMemory();
+I32 GetAvailableMemory();
+I32 GetCurrentMemory();
 
 // some constants
 #if 0
-const I32 MaxClipDistances()       { return GetI(GL_MAX_CLIP_DISTANCES); }
-const I32 MaxCubeMapTextureSize()  { return GetI(GL_MAX_CUBE_MAP_TEXTURE_SIZE); }
-const I32 MaxColorAttachments()    { return GetI(GL_MAX_COLOR_ATTACHMENTS); }
-const I32 MaxDrawBuffer()          { return Geti(GL_MAX_DRAW_BUFFERS); }
-const I32 MaxTextureImageUnits()   { return Geti(GL_MAX_TEXTURE_IMAGE_UNITS); }
-const I32 MaxTextureSize()         { return Geti(GL_MAX_TEXTURE_SIZE); }
-const I32 MaxTextureAnisotropy()   { return Geti(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT); }
-const I32 MaxVertexAttribs()       { return Geti(GL_MAX_VERTEX_ATTRIBS); }
+I32 MaxClipDistances()       { return GetI(GL_MAX_CLIP_DISTANCES); }
+I32 MaxCubeMapTextureSize()  { return GetI(GL_MAX_CUBE_MAP_TEXTURE_SIZE); }
+I32 MaxColorAttachments()    { return GetI(GL_MAX_COLOR_ATTACHMENTS); }
+I32 MaxDrawBuffer()          { return Geti(GL_MAX_DRAW_BUFFERS); }
+I32 MaxTextureImageUnits()   { return Geti(GL_MAX_TEXTURE_IMAGE_UNITS); }
+I32 MaxTextureSize()         { return Geti(GL_MAX_TEXTURE_SIZE); }
+I32 MaxTextureAnisotropy()   { return Geti(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT); }
+I32 MaxVertexAttribs()       { return Geti(GL_MAX_VERTEX_ATTRIBS); }
 #endif
 
 /// States management ----------------------------------------------------------

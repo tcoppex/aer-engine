@@ -14,13 +14,7 @@
 
 namespace {
 
-void DeinitializeSingletons() {
-  aer::GlobalClock::Deinitialize();
-  aer::Logger::Deinitialize();
-  aer::EventsHandler::Deinitialize();
-  aer::ShaderProxy::Deinitialize();
-  aer::Texture2DProxy::Deinitialize();
-}
+void DeinitializeSingletons();
 
 void InitializeSingletons() {
   aer::GlobalClock::Initialize();
@@ -30,6 +24,14 @@ void InitializeSingletons() {
   aer::Texture2DProxy::Initialize();
 
   atexit(DeinitializeSingletons);
+}
+
+void DeinitializeSingletons() {
+  aer::GlobalClock::Deinitialize();
+  aer::Logger::Deinitialize();
+  aer::EventsHandler::Deinitialize();
+  aer::ShaderProxy::Deinitialize();
+  aer::Texture2DProxy::Deinitialize();
 }
 
 }  // namespace
@@ -57,11 +59,10 @@ void Application::run() {
   init();
 
   if (nullptr == window_) {
-    Logger::Get().error("application launche with no window");
+    Logger::Get().error("Application launched with no window");
   }
 
-
-  GlobalClock  &clock = GlobalClock::Get();
+  GlobalClock &clock = GlobalClock::Get();
 
   /// Mainloop
   while (!bExit_) {

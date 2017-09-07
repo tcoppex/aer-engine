@@ -55,7 +55,7 @@ class EventsHandler : public Singleton<EventsHandler> {
   }
 
   /// Joystick events
-  const F32 joystick_axis_position(I32 axis) const {
+  F32 joystick_axis_position(I32 axis) const {
     return joystick_.position[axis]; 
   }
 

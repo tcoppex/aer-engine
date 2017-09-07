@@ -24,8 +24,8 @@ typedef uint32_t        U32;
 typedef uint64_t        U64;
 
 /// Fast integers (at least 32-bit, potentially more)
-typedef uint_fast32_t   U32F;
 typedef int_fast32_t    I32F;
+typedef uint_fast32_t   U32F;
 
 /// Pointers
 #if AER_64

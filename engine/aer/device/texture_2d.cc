@@ -50,7 +50,8 @@ void Texture2D::unbind_image(U32 image_unit) {
 void Texture2D::allocate(GLenum internalformat,
                          U32 width,
                          U32 height,
-                         U32 levels)
+                         U32 levels,
+                         bool immutable)
 {
   AER_ASSERT(bBound_);
 
@@ -58,14 +59,24 @@ void Texture2D::allocate(GLenum internalformat,
   GLenum format, type;
   Texture::GetTextureFormatInfo(internalformat, format, type);
 
-  // Allocate memory
-  U32 w = width;
-  U32 h = height;
-  for (U32 i = 0u; i < levels; ++i) {
-    w = glm::max(1u,  width >> i);
-    h = glm::max(1u, height >> i);
-    glTexImage2D(GL_TEXTURE_2D, i, internalformat, w, h, 0, format, type, NULL);
-    //if (w == h == 1u) { break; }
+  // Texture use sampling parameter from sampler object, so we specify
+  // their internal sampling to be nearest (no mipmapping)
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);//
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);//
+
+  if (!immutable) {
+    // Allocate memory
+    for (U32 i = 0u; i < levels; ++i) {
+      const U32 w = glm::max(1u,  width >> i);
+      const U32 h = glm::max(1u, height >> i);
+      glTexImage2D(GL_TEXTURE_2D, i, internalformat, w, h, 0, format, type, nullptr);
+      //if (w == h == 1u) { break; }
+    }
+  } else {
+    // TODO : Create a special method call for immutable creation
+    /// OpenGL 4.3+
+    /// Needed to be used as Image object by compute shaders
+    glTexStorage2D(GL_TEXTURE_2D, levels, internalformat, width, height);
   }
 
   // Update infos
@@ -76,6 +87,8 @@ void Texture2D::allocate(GLenum internalformat,
   storage_.format         = format;
   storage_.type           = type;
   bAllocated_ = true;
+
+  CHECKGLERROR();
 }
 
 void Texture2D::resize(U32 width, U32 height) {
