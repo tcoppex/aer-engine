@@ -43,17 +43,18 @@ Demos
 Compilation
 ---------------------------------
 
+The build was compiled against GCC 4.9.
+
 Compile first the engine, then the demos :
 ```
-mkdir build
-cd build
-mkdir engine demos
-cd engine
-cmake ../../engine -DCMAKE_BUILD_TYPE:STRING=Release
-make -j4
-cd ../demos
-cmake ../../demos -DCMAKE_BUILD_TYPE:STRING=Release
-make -j4
+$ mkdir build; cd build;
+$ mkdir engine; cd engine
+$ cmake ../../engine -DCMAKE_BUILD_TYPE:STRING=Release
+$ make -j
+$ cd ..
+$ mkdir demos; cd demos
+$ cmake ../../demos -DCMAKE_BUILD_TYPE:STRING=Release
+$ make -j
 ```
 
 Engine dependencies :
@@ -85,5 +86,5 @@ Engine dependencies :
     </tr>
 </table>
 
-Version number corresponded to the development environment.
+*Version number corresponded to the development environment.*
 
